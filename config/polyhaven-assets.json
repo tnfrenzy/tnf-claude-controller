@@ -1,0 +1,24 @@
+{
+  "source": "https://polyhaven.com",
+  "api": "https://api.polyhaven.com",
+  "license": "CC0 1.0 (public domain); Poly Haven asks for no attribution, credit is still written in meta.json",
+  "note": "Small fixed list for the Blender high-quality render of the 3D workshop. Downloaded only by `tnf w3d fetch-assets --yes` into <dataDir>/library/polyhaven/<id>/. Poly Haven has no brushed stainless texture: hairline / brushed steel stays procedural.",
+  "assets": [
+    {
+      "id": "granite_tile_03", "type": "texture", "use": "granite", "res": "2k", "name": "Đá granite (cắt một viên, tô lại màu theo materials.json)",
+      "maps": { "diff": "Diffuse", "nor": "nor_gl", "rough": "Rough" }, "crop": [0.01, 0.01, 0.32, 0.485], "size_m": 1.8
+    },
+    {
+      "id": "grey_cartago_01", "type": "texture", "use": "granite_light", "res": "2k", "name": "Đá xám sáng (granite màu xám nhạt)",
+      "maps": { "diff": "Diffuse", "nor": "nor_gl", "rough": "Rough" }, "size_m": 0.75
+    },
+    {
+      "id": "marble_01", "type": "texture", "use": "marble", "res": "2k", "name": "Đá cẩm thạch",
+      "maps": { "diff": "Diffuse", "nor": "nor_gl", "rough": "Rough" }, "size_m": 1.5
+    },
+    {
+      "id": "studio_small_09", "type": "hdri", "use": "studio", "res": "1k", "name": "HDRI phòng chụp nhỏ (ánh sáng và phản chiếu)",
+      "maps": { "hdr": "hdr" }
+    }
+  ]
+}

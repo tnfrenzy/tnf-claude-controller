@@ -1,0 +1,8 @@
+{
+  "remote": "origin",
+  "branch": "main",
+  "baseBranch": "main",
+  "expectedRemoteUrl": "https://github.com/<owner>/<repo>.git",
+  "author": { "name": "<owner>", "email": "<owner>@users.noreply.github.com" },
+  "snapshotDir": "../<repo>-public-snapshot"
+}

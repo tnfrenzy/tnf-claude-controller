@@ -1,0 +1,304 @@
+/* Single-screen shell, ported from docs/design/single-screen.html. Everything is scoped under .single-screen. */
+.single-screen {
+  --bg: #0b1020; --panel: #111829; --panel-2: #172034; --ink: #e9eef8; --muted: #8b98b3; --line: #243049;
+  --accent: #5aa0ff; --gold: #d9b26a; --ok: #2ed47a; --warn: #ffc542; --err: #ff5c5c;
+  font: 14px/1.45 "Segoe UI", system-ui, sans-serif; color: var(--ink); background: var(--bg);
+}
+.single-screen, .single-screen * { box-sizing: border-box; }
+.single-screen .icon-btn { width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); cursor: pointer; display: grid; place-items: center; padding: 0; }
+.single-screen .fine { font-size: 11px; color: var(--muted); }
+
+/* popup */
+.single-screen .ss-overlay { position: fixed; inset: 0; background: rgba(4,7,16,.6); backdrop-filter: blur(6px); display: grid; place-items: center; z-index: 50; padding: 16px; }
+.single-screen .ss-modal { width: min(900px, 100%); height: min(86vh, 760px); display: flex; flex-direction: column; overflow: hidden; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 30px 80px rgba(0,0,0,.6); animation: ss-in .18s ease-out; color: var(--ink); }
+.single-screen .ss-modal.ss-modal-lg { width: min(1100px, 96vw); height: 90vh; max-width: 100%; }
+@keyframes ss-in { from { transform: translateY(12px) scale(.98); opacity: 0; } to { transform: none; opacity: 1; } }
+.single-screen .ss-modal > header { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-bottom: 1px solid var(--line); flex: none; background: var(--panel); }
+.single-screen .ss-modal > header h3 { margin: 0; font-size: 15px; }
+.single-screen .ss-modal > header .fine { margin-left: 6px; }
+.single-screen .ss-body { padding: 14px 18px; flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; }
+.single-screen .skeleton { display: grid; gap: 10px; }
+.single-screen .skeleton .sk { height: 14px; border-radius: 6px; background: var(--panel-2); animation: ss-pulse 1.2s ease-in-out infinite; }
+.single-screen .skeleton .sk.title { height: 22px; width: 50%; }
+.single-screen .skeleton .sk.tabs { height: 30px; width: 80%; }
+@keyframes ss-pulse { 0%, 100% { opacity: .5; } 50% { opacity: 1; } }
+@media (max-width: 760px) {
+  .single-screen .ss-overlay { padding: 0; }
+  .single-screen .ss-modal { width: 100%; height: 100dvh; border-radius: 0; }
+  .single-screen .ss-body { padding: 10px; }
+}
+@media (max-width: 480px) {
+  .single-screen .ss-overlay { padding: 0; }
+  .single-screen .ss-modal, .single-screen .ss-modal.ss-modal-lg { width: 100%; height: 100dvh; border-radius: 0; }
+}
+
+/* scene */
+.single-screen .scene { position: relative; min-width: 0; min-height: 0; overflow: hidden; background: radial-gradient(1200px 600px at 60% 10%, #1a2550 0%, #0b1020 55%, #070a14 100%); }
+.single-screen .office-stage { display: flex; flex-direction: column; }
+.single-screen .stage-tabs { display: flex; gap: 6px; padding: 10px 14px; flex-wrap: wrap; z-index: 5; }
+.single-screen .stage-tab { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); cursor: pointer; font: inherit; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; }
+.single-screen .stage-tab.on { border-color: var(--accent); background: rgba(90,160,255,.18); }
+.single-screen .stage-tab.add, .single-screen .stage-tab.release { color: var(--muted); }
+.single-screen .stage-office { position: relative; flex: 1; min-height: 0; display: grid; place-items: center; padding: 0 8px; }
+.single-screen .stage-office .iso-office { width: 100%; height: 100%; max-height: 100%; }
+.floor-popup .stage-office { position: relative; display: grid; place-items: center; height: min(52vh, 480px); min-height: 220px; }
+.floor-popup .stage-office .iso-office { width: 100%; height: 100%; max-height: 100%; }
+.view-toggle-text { margin-left: 6px; font-size: 12px; }
+.single-screen .stage-legend { text-align: center; padding: 6px 0 10px; font-size: 11px; }
+.single-screen .hint { position: absolute; left: 50%; transform: translateX(-50%); top: 14px; z-index: 5; font-size: 12px; color: var(--muted); background: rgba(11,16,32,.6); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); backdrop-filter: blur(4px); pointer-events: none; }
+@media (max-width: 760px) { .single-screen .hint { font-size: 11px; top: 8px; white-space: nowrap; } }
+.single-screen svg.city { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.single-screen svg.city .lbl { font: 600 12px "Segoe UI", system-ui; fill: #e9eef8; }
+.single-screen svg.city .sub { font: 10px "Segoe UI", system-ui; fill: #8b98b3; }
+.single-screen svg.city * { transform-box: view-box; }
+.single-screen svg.city .star, .single-screen svg.city .tree, .single-screen svg.city .sheen, .single-screen svg.city .win { transform-box: fill-box; }
+.single-screen svg.city .star { animation: ss-twinkle 3s ease-in-out infinite; transform-origin: center; }
+.single-screen svg.city .beacon { animation: ss-beacon 2s ease-in-out infinite; }
+.single-screen svg.city .win { animation: ss-winflick 11s ease-in-out infinite; }
+.single-screen svg.city .tree { transform-origin: 50% 100%; animation: ss-sway 6s ease-in-out infinite alternate; }
+.single-screen svg.city .win-blink { animation-name: ss-winblink; animation-timing-function: ease-in-out; animation-iteration-count: infinite; }
+.single-screen svg.city .win-wake { transform-box: fill-box; animation: ss-winwake 7s ease-in-out infinite; }
+.single-screen svg.city .sheen { animation: ss-sheen 9s ease-in-out infinite; }
+.single-screen svg.city .neon { animation: ss-neon 2.4s ease-in-out infinite alternate; }
+.single-screen svg.city .cloud { animation: ss-drift linear infinite; }
+.single-screen svg.city .floor-band { cursor: pointer; transition: filter .2s ease; }
+.single-screen svg.city .floor-band:hover .glass { filter: brightness(1.38); }
+.single-screen svg.city .floor-band:hover .plate { fill: #1c2944; stroke: #6caeff; }
+.single-screen svg.city .floor-running .plate { filter: drop-shadow(0 0 8px rgba(90,160,255,.35)); }
+@keyframes ss-twinkle { 0%,100% { opacity: .3; transform: scale(.8); } 50% { opacity: 1; transform: scale(1.2); } }
+@keyframes ss-beacon { 0%,100% { opacity: .2; } 50% { opacity: 1; } }
+@keyframes ss-winblink { 0%,100% { opacity: 1; } 50% { opacity: .18; } }
+@keyframes ss-winwake { 0%,35%,100% { fill: #0b1428; opacity: .9; } 50%,75% { fill: #ffd9a3; opacity: .9; } }
+@keyframes ss-winflick { 0%,93%,100% { opacity: 1; } 96% { opacity: .35; } }
+@keyframes ss-sway { from { transform: rotate(-1.4deg); } to { transform: rotate(1.4deg); } }
+@keyframes ss-sheen { 0% { transform: translateX(-120px); opacity: 0; } 25% { opacity: .35; } 60% { opacity: .35; } 100% { transform: translateX(380px); opacity: 0; } }
+@keyframes ss-neon { from { opacity: .6; filter: drop-shadow(0 0 2px #ffb15c); } to { opacity: 1; filter: drop-shadow(0 0 10px #ffb15c); } }
+@keyframes ss-drift { from { transform: translateX(-300px); } to { transform: translateX(1700px); } }
+
+/* left panel */
+.single-screen .side { background: linear-gradient(180deg, #131c30, #0e1526); border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
+.single-screen .side-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.single-screen .logo { width: 36px; height: 36px; border-radius: 11px; box-shadow: 0 6px 18px rgba(90,160,255,.35); }
+.single-screen .brand { font-weight: 700; } .single-screen .brand small { display: block; font-weight: 400; color: var(--muted); font-size: 11px; }
+.single-screen .work { padding: 14px 16px; overflow: auto; flex: 1; display: flex; flex-direction: column; gap: 12px; }
+.single-screen .work h4 { margin: 0 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); display: flex; align-items: center; }
+.single-screen .work h4 .mini { margin-left: auto; font-size: 11px; text-transform: none; letter-spacing: 0; padding: 3px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); cursor: pointer; }
+.single-screen .cmd { display: flex; gap: 8px; }
+.single-screen .cmd input { flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; font: inherit; background: #0b1020; color: var(--ink); }
+.single-screen .btn { padding: 10px 14px; border-radius: 10px; border: 0; background: var(--accent); color: #fff; font-weight: 600; cursor: pointer; box-shadow: 0 6px 16px rgba(90,160,255,.3); }
+.single-screen .side .card { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: linear-gradient(180deg, #172034, #121a2c); margin: 0; }
+.single-screen .run-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px dashed var(--line); font-size: 13px; cursor: pointer; }
+.single-screen .run-row:first-of-type { border-top: 0; }
+.single-screen .env-row { flex-wrap: wrap; border-left: 3px solid transparent; padding-left: 6px; margin-left: -9px; border-radius: 6px; }
+.single-screen .env-row.selected { border-left-color: var(--accent); background: rgba(90,160,255,.08); }
+.single-screen .env-row .mini-office { margin-left: auto; font-size: 10px; padding: 2px 7px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--muted); cursor: pointer; flex: none; }
+.single-screen .env-current { font-size: 11px; color: var(--muted); margin-top: 6px; }
+.single-screen .env-current b { color: var(--ink); font-weight: 600; }
+.single-screen .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); animation: ss-ping 1.6s infinite; flex: none; }
+.single-screen .dot.idle { background: var(--muted); animation: none; }
+.single-screen .steps { display: flex; gap: 4px; margin: 4px 0; flex-wrap: wrap; }
+.single-screen .step { font-size: 10px; padding: 2px 7px; border-radius: 999px; background: #0b1020; color: var(--muted); border: 1px solid var(--line); }
+.single-screen .step.doing { background: rgba(90,160,255,.2); color: #b4d0ff; border-color: #5aa0ff; }
+.single-screen .step.done { background: rgba(46,212,122,.15); color: #7ff0b0; border-color: #2ed47a; }
+.single-screen .step.bad { background: rgba(255,92,92,.15); color: #ff9a9a; border-color: #ff5c5c; }
+.single-screen .nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 12px 16px; border-top: 1px solid var(--line); }
+.single-screen .nav button { padding: 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); cursor: pointer; font: inherit; font-weight: 600; }
+.single-screen .note { font-size: 11px; color: var(--muted); padding: 0 16px 10px; }
+@keyframes ss-ping { 0% { box-shadow: 0 0 0 0 rgba(46,212,122,.6); } 100% { box-shadow: 0 0 0 10px rgba(46,212,122,0); } }
+/* shell layout: left column + scene; one column at <= 480px */
+.single-screen { display: grid; grid-template-columns: 360px minmax(0, 1fr); height: 100vh; overflow: hidden; }
+.single-screen .side { overflow: auto; }
+@media (max-width: 480px) {
+  .single-screen { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(260px, 1fr); height: auto; min-height: 100vh; overflow-x: hidden; }
+  .single-screen .side { border-right: 0; border-bottom: 1px solid var(--line); overflow: visible; }
+  .single-screen .scene { min-height: 300px; }
+}
+@media (max-width: 480px) { .single-screen .nav { padding: 8px 16px; } .single-screen .nav button { padding: 8px 4px; } }
+/* view toggle spans its own row so it is never squeezed or overlapped */
+/* wide screens: the scene fills the whole remaining cell */
+@media (min-width: 1280px) { .single-screen main.scene { width: 100%; height: 100%; } }
+@media (prefers-reduced-motion: reduce) {
+  .single-screen *, .single-screen *::before, .single-screen *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+.iso-zoom { display: grid; gap: 4px; min-width: 0; margin-bottom: 8px; }
+.iso-zoom-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+.iso-zoom-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.iso-zoom-buttons { display: inline-flex; gap: 4px; flex: none; }
+.iso-zoom-frame { overflow: auto; max-height: 70vh; border: 1px solid var(--line, #8884); border-radius: 8px; cursor: grab; touch-action: pan-x pan-y; }
+.iso-zoom-frame.dragging { cursor: grabbing; user-select: none; }
+.iso-zoom-content .iso-office { display: block; width: 100%; height: auto; aspect-ratio: 900 / 560; }
+
+/* Skill training gym (components/GymRoom.tsx): isometric room, the skill trains while the trainers coach. */
+.gym-room { display: grid; gap: 6px; min-width: 0; max-width: 100%; }
+.gym-room .iso-gym { display: block; width: 100%; height: auto; aspect-ratio: 1160 / 836; max-height: max(360px, 72vh); background: #0f1626; border-radius: 8px; }
+@media (min-width: 768px) { .gym-room .iso-gym { min-height: 360px; } }
+.gym-hud { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; font-size: 13px; min-width: 0; }
+.gym-phase { font-weight: 700; }
+.gym-meter { position: relative; flex: 1 1 120px; min-width: 80px; max-width: 220px; height: 8px; border-radius: 4px; background: #8884; overflow: hidden; }
+.gym-meter-fill { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #14b8a6, #4fd08a); transition: width .4s ease; }
+.gym-trainers { display: flex; flex-wrap: wrap; gap: 4px 8px; min-width: 0; }
+.gym-trainer { opacity: 0.6; }
+.gym-trainer.on { opacity: 1; font-weight: 700; }
+/* Machines react while the skill uses them */
+.iso-gym .gym-belt { animation: gym-belt-move .5s linear infinite; }
+.iso-gym .gym-bar { animation: gym-lift 1.2s ease-in-out infinite alternate; }
+.iso-gym .gym-bag { transform-box: fill-box; transform-origin: 50% 0; animation: gym-swing .9s ease-in-out infinite alternate; }
+.iso-gym .gym-crank { animation: gym-spin .6s linear infinite; }
+.iso-gym .gym-stack { animation: gym-stack 1.4s ease-in-out infinite alternate; }
+.iso-gym .gym-sweat { animation: gym-sweatfall 1.5s linear infinite; }
+.iso-gym .gym-towel { transform-box: fill-box; transform-origin: 50% 50%; animation: gym-towelwig .3s ease-in-out infinite alternate; }
+.iso-gym .gym-curl-l { animation: gym-curl-dl 1.2s ease-in-out infinite alternate; }
+.iso-gym .gym-curl-r { animation: gym-curl-dr 1.2s ease-in-out infinite alternate; }
+.iso-gym .gym-hang { animation: gym-hang 1.6s ease-in-out infinite alternate; }
+@keyframes gym-belt-move { from { transform: translate(0, 0); } to { transform: translate(-11.4px, 6.6px); } }
+@keyframes gym-lift { from { transform: translateY(0); } to { transform: translateY(-14px); } }
+@keyframes gym-swing { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
+@keyframes gym-spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+@keyframes gym-stack { from { transform: translateY(0); } to { transform: translateY(-14px); } }
+@keyframes gym-sweatfall { from { transform: translateY(0); opacity: .95; } to { transform: translateY(16px); opacity: 0; } }
+@keyframes gym-towelwig { from { transform: rotate(-9deg); } to { transform: rotate(9deg) translateX(1.5px); } }
+@keyframes gym-curl-dl { from { transform: translate(0, 0); } to { transform: translate(12.7px, -31px); } }
+@keyframes gym-curl-dr { from { transform: translate(0, 0); } to { transform: translate(-12.7px, -31px); } }
+@keyframes gym-hang { from { transform: translateY(-43px); } to { transform: translateY(-53px); } }
+
+/* Gym exercises of the sprite (acts set by office/gym-scene.ts); legs and arms swing, the torso breathes harder */
+.iso-gym .p.run .leg { animation: p-step .3s ease-in-out infinite alternate; }
+.iso-gym .p.run .leg.r { animation-delay: -.3s; }
+.iso-gym .p.run .arm { animation: p-swing .3s ease-in-out infinite alternate; }
+.iso-gym .p.run .arm.l { animation-delay: -.3s; }
+.iso-gym .p.run .torso { animation: p-lean .3s ease-in-out infinite alternate; }
+.iso-gym .p.run .body { animation: gym-runbob .3s ease-in-out infinite alternate; }
+.iso-gym .p.pedal .leg { animation: gym-pedal .6s ease-in-out infinite alternate; }
+.iso-gym .p.pedal .leg.r { animation-delay: -.6s; }
+.iso-gym .p.pedal .arm { transform: rotate(-58deg); }
+.iso-gym .p.pedal .torso { animation: p-breathe .5s ease-in-out infinite alternate; }
+.iso-gym .p.pull .arm.l { animation: gym-pulld-l 1.4s ease-in-out infinite alternate; }
+.iso-gym .p.pull .arm.r { animation: gym-pulld-r 1.4s ease-in-out infinite alternate; }
+.iso-gym .p.pull .torso { animation: p-breathe .6s ease-in-out infinite alternate; }
+.iso-gym .p.hang .arm { animation: gym-hangarm 1.6s ease-in-out infinite alternate; }
+.iso-gym .p.hang .leg.l { animation: gym-hangleg 1.6s ease-in-out infinite alternate; }
+.iso-gym .p.hang .leg.r { animation: gym-hangleg 1.6s ease-in-out infinite alternate-reverse; }
+.iso-gym .p.curl .arm.l { animation: gym-curl-al 1.2s ease-in-out infinite alternate; }
+.iso-gym .p.curl .arm.r { animation: gym-curl-ar 1.2s ease-in-out infinite alternate; }
+.iso-gym .p.curl .torso { animation: p-breathe .7s ease-in-out infinite alternate; }
+.iso-gym .p.benchpress .arm { animation: gym-bp 1.2s ease-in-out infinite alternate; }
+.iso-gym .p.benchpress .torso { animation: p-breathe .7s ease-in-out infinite alternate; }
+.iso-gym .p.punch .arm.r { animation: gym-punch .5s ease-in-out infinite alternate; }
+.iso-gym .p.punch .arm.l { animation: gym-punch .5s ease-in-out infinite alternate-reverse; }
+.iso-gym .p.punch .torso { animation: gym-punchtorso .5s ease-in-out infinite alternate; }
+.iso-gym .p.punch .leg.l { animation: gym-punchstep .5s ease-in-out infinite alternate; }
+.iso-gym .p.situp .torso { transform-origin: 50% 100%; animation: gym-crunch 1.1s ease-in-out infinite alternate; }
+.iso-gym .p.situp .head { animation: gym-crunch-head 1.1s ease-in-out infinite alternate; }
+.iso-gym .p.situp .arm { transform: rotate(150deg); }
+.iso-gym .p.wipe .arm.r { animation: gym-wipe .35s ease-in-out infinite alternate; }
+.iso-gym .p.wipe .head { animation: p-nodyes .7s ease-in-out infinite alternate; }
+.iso-gym .p.wipe .torso { animation: p-breathe 1s ease-in-out infinite alternate; }
+.iso-gym .p.point .arm.r { animation: gym-point 1s ease-in-out infinite alternate; }
+.iso-gym .p.point.fl .arm.r { animation-name: gym-point-fl; }
+.iso-gym .p.point .head { animation: p-nodyes 1s ease-in-out infinite alternate; }
+.iso-gym .p.write .arm.r { animation: gym-write .45s ease-in-out infinite alternate; }
+.iso-gym .p.clap .arm.l { animation: gym-clap-l .35s ease-in-out infinite alternate; }
+.iso-gym .p.clap .arm.r { animation: gym-clap-r .35s ease-in-out infinite alternate; }
+.iso-gym .p.clap .torso { animation: p-hop .35s ease-in-out infinite alternate; }
+@keyframes gym-crunch { from { transform: rotate(0); } to { transform: rotate(-16deg); } }
+@keyframes gym-crunch-head { from { transform: translateY(0); } to { transform: translateY(-3px) rotate(-6deg); } }
+@keyframes gym-runbob { from { transform: translateY(0); } to { transform: translateY(-3px); } }
+@keyframes gym-pedal { from { transform: rotate(-16deg); } to { transform: rotate(16deg); } }
+@keyframes gym-pulld-l { from { transform: rotate(165deg); } to { transform: rotate(72deg); } }
+@keyframes gym-pulld-r { from { transform: rotate(-165deg); } to { transform: rotate(-72deg); } }
+@keyframes gym-hangarm { from { transform: rotate(180deg) scaleY(1); } to { transform: rotate(180deg) scaleY(.55); } }
+@keyframes gym-hangleg { from { transform: rotate(-6deg); } to { transform: rotate(8deg); } }
+@keyframes gym-curl-al { from { transform: rotate(0); } to { transform: rotate(-135deg); } }
+@keyframes gym-curl-ar { from { transform: rotate(0); } to { transform: rotate(135deg); } }
+@keyframes gym-bp { from { transform: rotate(40deg) scaleY(.6); } to { transform: rotate(62deg) scaleY(1); } }
+@keyframes gym-punch { from { transform: rotate(-12deg); } to { transform: rotate(-90deg); } }
+@keyframes gym-punchtorso { from { transform: rotate(-3deg); } to { transform: rotate(4deg); } }
+@keyframes gym-punchstep { from { transform: rotate(-8deg); } to { transform: rotate(8deg); } }
+@keyframes gym-wipe { from { transform: rotate(-150deg); } to { transform: rotate(-172deg); } }
+@keyframes gym-point { from { transform: rotate(-92deg); } to { transform: rotate(-108deg); } }
+@keyframes gym-point-fl { from { transform: rotate(92deg); } to { transform: rotate(108deg); } }
+@keyframes gym-write { from { transform: rotate(-150deg); } to { transform: rotate(-164deg); } }
+@keyframes gym-clap-l { from { transform: rotate(-62deg); } to { transform: rotate(-96deg); } }
+@keyframes gym-clap-r { from { transform: rotate(62deg); } to { transform: rotate(96deg); } }
+@media (prefers-reduced-motion: reduce) { .iso-gym *, .iso-gym .p * { animation: none !important; } }
+@media (max-width: 480px) { .gym-room .iso-gym { max-height: 44vh; } }
+
+/* 3D workshop room (components/Workshop3DRoom.tsx): same room frame as the gym, plus its own acts and props. */
+.w3r-room { display: grid; gap: 6px; min-width: 0; max-width: 100%; }
+.w3r-tabs { display: flex; gap: 6px; margin-bottom: 6px; }
+.w3r-demo-bar { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+.w3r-demo-bar button { padding: 2px 6px; font-size: 12px; }
+.w3r-empty { display: grid; gap: 6px; }
+/* 3D workshop session popup (components/Workshop3DPopup.tsx) and request sheet (components/Design3DPanel.tsx). */
+.w3r-tabs { flex-wrap: wrap; }
+.w3i-controls { display: grid; gap: 6px; margin-bottom: 8px; min-width: 0; }
+.w3i-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.w3i-state { font-weight: 700; }
+.w3i-buttons { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+.w3i-banner { display: grid; gap: 4px; font-size: 13px; overflow-wrap: anywhere; white-space: pre-wrap; }
+.w3i-hint { font-weight: 600; }
+.w3i-note { overflow-wrap: anywhere; }
+.w3i-questions { display: grid; gap: 6px; padding: 8px; border: 1px solid var(--border, #8886); border-radius: 8px; }
+.w3i-questions ol { margin: 0 0 0 18px; padding: 0; font-size: 13px; }
+.w3i-questions textarea, .w3i-sheet textarea { width: 100%; box-sizing: border-box; font: inherit; }
+.w3i-questions button { justify-self: start; }
+.w3i-msg { font-size: 13px; overflow-wrap: anywhere; }
+.w3i-files ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.w3i-files li { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.w3i-file-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
+.w3i-report { max-width: 100%; overflow-wrap: anywhere; }
+.w3i-sheet { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; margin-bottom: 8px; }
+.w3i-sheet label { display: grid; gap: 3px; font-size: 13px; min-width: 0; }
+.w3i-sheet input, .w3i-sheet select { min-width: 0; width: 100%; box-sizing: border-box; }
+.w3i-sheet .w3i-wide { grid-column: 1 / -1; }
+.w3i-sheet > button { justify-self: start; }
+.w3i-params { display: grid; gap: 4px; border: 1px solid var(--border, #8886); border-radius: 8px; padding: 6px 8px; margin: 0; min-width: 0; }
+.w3i-params legend { font-size: 13px; padding: 0 4px; }
+.w3i-params > button { justify-self: start; }
+.w3i-param-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 6px; }
+.w3i-images { display: grid; gap: 4px; border: 1px solid var(--border, #8886); border-radius: 8px; padding: 6px 8px; margin: 0; min-width: 0; }
+.w3i-images legend { font-size: 13px; padding: 0 4px; }
+.w3i-images input[type="file"] { max-width: 100%; }
+.w3i-image-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.w3i-image-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; align-items: center; }
+.w3i-image-list span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 480px) { .w3i-sheet { grid-template-columns: minmax(0, 1fr); } .w3i-buttons { margin-left: 0; } }
+.w3r-questions ol { margin: 2px 0 0 18px; padding: 0; font-size: 13px; }
+.w3r-speaker { opacity: .85; }
+.w3r-issue-count { color: #e24b4b; font-weight: 700; }
+.w3r-error { font-size: 13px; }
+@keyframes w3r-spin { to { stroke-dashoffset: -28; } }
+@keyframes w3r-bob { from { transform: translateY(0); } to { transform: translateY(-3px); } }
+@keyframes w3r-flash { 0%, 70% { opacity: 1; } 78%, 84% { opacity: .15; } 100% { opacity: 1; } }
+@keyframes w3r-head { from { transform: translateX(0); } to { transform: translateX(10px); } }
+@keyframes w3r-pulse { from { opacity: .35; } to { opacity: 1; } }
+@keyframes w3r-pin { from { transform: rotate(-3deg); } to { transform: rotate(3deg); } }
+@keyframes w3r-chip { from { transform: translateY(0) rotate(-6deg); } to { transform: translateY(-4px) rotate(8deg); } }
+@keyframes w3r-glint { from { opacity: .2; } to { opacity: 1; } }
+@keyframes w3r-up { from { transform: rotate(-150deg); } to { transform: rotate(-170deg); } }
+@keyframes w3r-loupe { from { transform: rotate(-95deg); } to { transform: rotate(-125deg); } }
+@keyframes w3r-swap-l { from { transform: rotate(-100deg); } to { transform: rotate(-130deg); } }
+@keyframes w3r-swap-r { from { transform: rotate(-130deg); } to { transform: rotate(-100deg); } }
+.iso-w3r .w3r-ring { animation: w3r-spin 2.2s linear infinite; }
+.iso-w3r .w3r-model { transform-box: fill-box; transform-origin: 50% 100%; animation: w3r-bob 1.8s ease-in-out infinite alternate; }
+.iso-w3r .w3r-flash { animation: w3r-flash 1.6s linear infinite; }
+.iso-w3r .w3r-head { animation: w3r-head .9s ease-in-out infinite alternate; }
+.iso-w3r .w3r-active { animation: w3r-pulse .9s ease-in-out infinite alternate; }
+.iso-w3r .w3r-pin { transform-box: fill-box; transform-origin: 50% 0; animation: w3r-pin 1.6s ease-in-out infinite alternate; }
+.iso-w3r .w3r-chips { animation: w3r-chip .8s ease-in-out infinite alternate; }
+.iso-w3r .w3r-glint { animation: w3r-glint .7s ease-in-out infinite alternate; }
+.w3r-room .w3r-busy { animation: w3r-pulse .9s ease-in-out infinite alternate; }
+/* acts of the nine roles (the shared ones - write, point, clap, talking, drinking - come from .iso-gym / .iso-office) */
+.iso-w3r .p.shoot .arm.r { animation: w3r-up .5s ease-in-out infinite alternate; }
+.iso-w3r .p.shoot .arm.l { transform: rotate(-70deg); }
+.iso-w3r .p.shoot .head { transform: rotate(-4deg); }
+.iso-w3r .p.inspect .arm.r { animation: w3r-loupe 1.1s ease-in-out infinite alternate; }
+.iso-w3r .p.inspect .head { animation: p-nodyes 1.1s ease-in-out infinite alternate; }
+.iso-w3r .p.present .arm.r { transform: rotate(-70deg); }
+.iso-w3r .p.present .arm.l { animation: gym-point 1s ease-in-out infinite alternate; }
+.iso-w3r .p.present .head { animation: p-nodyes 1.2s ease-in-out infinite alternate; }
+.iso-w3r .p.compare .arm.l { animation: w3r-swap-l .8s ease-in-out infinite alternate; }
+.iso-w3r .p.compare .arm.r { animation: w3r-swap-r .8s ease-in-out infinite alternate; }
+.iso-w3r .p.compare .head { animation: p-nodyes .8s ease-in-out infinite alternate; }
+.iso-w3r .p.write .arm.r { animation: gym-write .45s ease-in-out infinite alternate; }
+@media (prefers-reduced-motion: reduce) { .iso-w3r *, .iso-w3r .p * { animation: none !important; } }

@@ -1,0 +1,35 @@
+{
+  "roles": ["cad-modeler", "elevator-3d-designer", "model-3d-reviewer", "render-presenter"],
+  "templates": [
+    {
+      "id": "cabin-passenger",
+      "label": "Cabin thang khách",
+      "prompt": "Thiết kế mô hình 3D cabin thang máy chở khách với kích thước thông thủy rộng {{width}} mm, sâu {{depth}} mm, cao {{height}} mm, vật liệu vách {{material}}. Gồm vách, sàn, trần, tay vịn và cửa cabin; ghi rõ giả định và đơn vị mm.",
+      "formats": ["step", "stl", "glb"]
+    },
+    {
+      "id": "landing-door",
+      "label": "Cửa tầng",
+      "prompt": "Thiết kế mô hình 3D cửa tầng thang máy mở giữa hai cánh, khung cửa rộng {{width}} mm, dày {{depth}} mm, cao {{height}} mm, vật liệu {{material}}. Gồm khung, hai cánh cửa, ngưỡng cửa và ray treo; ghi rõ giả định và đơn vị mm.",
+      "formats": ["step", "stl"]
+    },
+    {
+      "id": "cop-panel",
+      "label": "Bảng COP",
+      "prompt": "Thiết kế mô hình 3D bảng điều khiển COP trong cabin thang máy, rộng {{width}} mm, dày {{depth}} mm, cao {{height}} mm, vật liệu mặt {{material}}. Gồm mặt bảng, hàng nút gọi tầng, màn hình hiển thị và khung lắp; ghi rõ giả định và đơn vị mm.",
+      "formats": ["step", "glb"]
+    },
+    {
+      "id": "cabin-ceiling",
+      "label": "Trần cabin",
+      "prompt": "Thiết kế mô hình 3D trần cabin thang máy rộng {{width}} mm, sâu {{depth}} mm, chiều cao tính cả hộp đèn {{height}} mm, vật liệu {{material}}. Gồm tấm trần, hệ đèn âm và cửa thoát hiểm; ghi rõ giả định và đơn vị mm.",
+      "formats": ["step", "stl", "glb"]
+    },
+    {
+      "id": "handrail",
+      "label": "Tay vịn cabin",
+      "prompt": "Thiết kế mô hình 3D tay vịn cabin thang máy dài {{width}} mm, nhô ra {{depth}} mm, cao {{height}} mm tính từ sàn cabin, vật liệu {{material}}. Gồm thanh vịn, chân đỡ và đầu bịt; ghi rõ giả định và đơn vị mm.",
+      "formats": ["step", "stl"]
+    }
+  ]
+}

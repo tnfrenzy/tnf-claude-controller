@@ -1,0 +1,18 @@
+{
+  "materials": {
+    "floor": {"color": [0.55, 0.55, 0.57], "metallic": 0, "roughness": 0.5, "texture": {"kind": "noise", "scale": 40, "angle": 0}},
+    "ceiling": {"color": [0.95, 0.95, 0.95], "metallic": 0, "roughness": 0.6},
+    "wall_left": {"color": [0.8, 0.8, 0.82], "metallic": 1, "roughness": 0.35, "texture": {"kind": "hairline", "scale": 40, "angle": 90}},
+    "wall_right": {"color": [0.8, 0.8, 0.82], "metallic": 1, "roughness": 0.35, "texture": {"kind": "hairline", "scale": 40, "angle": 90}},
+    "wall_back": {"color": [0.8, 0.8, 0.82], "metallic": 1, "roughness": 0.35, "texture": {"kind": "hairline", "scale": 40, "angle": 90}},
+    "wall_front_left": {"color": [0.8, 0.8, 0.82], "metallic": 1, "roughness": 0.35, "texture": {"kind": "hairline", "scale": 40, "angle": 90}},
+    "wall_front_right": {"color": [0.8, 0.8, 0.82], "metallic": 1, "roughness": 0.35, "texture": {"kind": "hairline", "scale": 40, "angle": 90}},
+    "front_transom": {"color": [0.8, 0.8, 0.82], "metallic": 1, "roughness": 0.35, "texture": {"kind": "hairline", "scale": 40, "angle": 90}},
+    "door_panel_left": {"color": [0.8, 0.8, 0.82], "metallic": 1, "roughness": 0.35, "texture": {"kind": "hairline", "scale": 40, "angle": 90}},
+    "door_panel_right": {"color": [0.8, 0.8, 0.82], "metallic": 1, "roughness": 0.35, "texture": {"kind": "hairline", "scale": 40, "angle": 90}},
+    "door_sill": {"color": [0.8, 0.8, 0.82], "metallic": 1, "roughness": 0.35, "texture": {"kind": "hairline", "scale": 40, "angle": 90}},
+    "handrail_back": {"color": [0.85, 0.85, 0.87], "metallic": 1, "roughness": 0.25, "texture": {"kind": "brushed", "scale": 30, "angle": 0}},
+    "handrail_bracket_1": {"color": [0.85, 0.85, 0.87], "metallic": 1, "roughness": 0.25, "texture": {"kind": "brushed", "scale": 30, "angle": 0}},
+    "handrail_bracket_2": {"color": [0.85, 0.85, 0.87], "metallic": 1, "roughness": 0.25, "texture": {"kind": "brushed", "scale": 30, "angle": 0}}
+  }
+}

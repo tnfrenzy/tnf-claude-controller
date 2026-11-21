@@ -1,0 +1,25 @@
+.vs-room-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.vs-room-title { font-weight: 600; font-size: 1.05em; }
+.vs-room-badge { padding: 2px 8px; border-radius: 10px; background: var(--border); color: var(--text); font-size: 0.8em; }
+.vs-room-badge--busy { background: var(--warn); color: var(--accent-text); }
+.vs-room-badge--failed { background: var(--err); color: var(--accent-text); }
+.vs-room-badge--done { background: var(--ok); color: var(--accent-text); }
+.vs-room-cost { color: var(--muted); font-size: 0.85em; }
+.vs-room-error { color: var(--err); margin: 6px 0; font-size: 0.9em; }
+.vs-room-grid { display: grid; grid-template-columns: 1fr; gap: 12px; align-items: start; }
+.vs-room-assets { border: 1px solid var(--border); border-radius: 8px; padding: 8px; background: var(--panel); }
+.vs-room-assets h4 { margin: 0 0 6px; font-size: 0.9em; color: var(--muted); }
+.vs-room-assetlist { list-style: none; margin: 0 0 8px; padding: 0; max-height: 260px; overflow: auto; }
+.vs-room-asset { font-size: 0.85em; padding: 3px 0; border-bottom: 1px solid var(--border); word-break: break-all; }
+.vs-room-main { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.vs-room-controls { display: flex; align-items: center; gap: 8px; }
+.vs-room-clock { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 0.85em; }
+.vs-room-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.vs-room-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
+@media (max-width: 640px) { .vs-room-grid { grid-template-columns: 1fr; } }
+.vs-room-videos { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; padding: 10px 12px; border: 1px solid var(--line, #2a3040); border-radius: 12px; }
+.vs-room-videos h4 { margin: 0; font-size: 13px; }
+.vs-room-videos .warning { margin: 0; color: var(--warn, #fbbf24); font-size: 13px; }
+.vs-pv-player { width: 100%; max-height: 240px; background: #000; border-radius: 10px; }
+.vs-pv-final { display: flex; flex-direction: column; gap: 6px; }
+.vs-pv-watch { align-self: flex-start; }

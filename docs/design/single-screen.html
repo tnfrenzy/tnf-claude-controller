@@ -1,0 +1,721 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TNF Controller · mẫu một màn hình</title>
+<style>
+  :root {
+    --bg: #0b1020; --panel: #111829; --panel-2: #172034; --ink: #e9eef8; --muted: #8b98b3; --line: #243049;
+    --accent: #5aa0ff; --gold: #d9b26a; --ok: #2ed47a; --warn: #ffc542; --err: #ff5c5c;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { font: 14px/1.45 "Segoe UI", system-ui, sans-serif; color: var(--ink); background: var(--bg); overflow: hidden; }
+  .app { display: grid; grid-template-columns: 310px 1fr; height: 100vh; }
+  .side { background: linear-gradient(180deg, #131c30, #0e1526); border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
+  .side-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+  .logo { width: 36px; height: 36px; border-radius: 11px; background: linear-gradient(135deg, #5aa0ff, #9cc4ff); display: grid; place-items: center; color: #fff; font-weight: 800; box-shadow: 0 6px 18px rgba(90,160,255,.35); }
+  .brand { font-weight: 700; } .brand small { display: block; font-weight: 400; color: var(--muted); font-size: 11px; }
+  .icon-btn { margin-left: auto; width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); cursor: pointer; display: grid; place-items: center; }
+  .work { padding: 14px 16px; overflow: auto; flex: 1; display: flex; flex-direction: column; gap: 12px; }
+  .work h4 { margin: 0 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); display: flex; align-items: center; }
+  .work h4 .mini { margin-left: auto; font-size: 11px; text-transform: none; letter-spacing: 0; padding: 3px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); cursor: pointer; }
+  .cmd { display: flex; gap: 8px; }
+  .cmd input { flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; font: inherit; background: #0b1020; color: var(--ink); }
+  .btn { padding: 10px 14px; border-radius: 10px; border: 0; background: var(--accent); color: #fff; font-weight: 600; cursor: pointer; box-shadow: 0 6px 16px rgba(90,160,255,.3); }
+  .btn.ghost { background: var(--panel-2); color: var(--ink); border: 1px solid var(--line); box-shadow: none; }
+  .card { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: linear-gradient(180deg, #172034, #121a2c); }
+  .run-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px dashed var(--line); font-size: 13px; cursor: pointer; }
+  .run-row:first-of-type { border-top: 0; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); animation: ping 1.6s infinite; flex: none; }
+  .dot.idle { background: var(--muted); animation: none; } .dot.off { background: var(--warn); animation: none; }
+  .steps { display: flex; gap: 4px; margin-top: 4px; margin-bottom: 4px; flex-wrap: wrap; }
+  .step { font-size: 10px; padding: 2px 7px; border-radius: 999px; background: #0b1020; color: var(--muted); border: 1px solid var(--line); }
+  .step.doing { background: rgba(90,160,255,.2); color: #b4d0ff; border-color: #5aa0ff; }
+  .step.done { background: rgba(46,212,122,.15); color: #7ff0b0; border-color: #2ed47a; }
+  .nav { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--line); }
+  .nav button { padding: 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); cursor: pointer; font: inherit; font-weight: 600; }
+  .note { font-size: 11px; color: var(--muted); padding: 0 16px 10px; }
+  .fine { font-size: 11px; color: var(--muted); }
+  @keyframes ping { 0% { box-shadow: 0 0 0 0 rgba(46,212,122,.6);} 100% { box-shadow: 0 0 0 10px rgba(46,212,122,0);} }
+
+  .scene { position: relative; min-width: 0; min-height: 0; overflow: hidden; background: radial-gradient(1200px 600px at 60% 10%, #1a2550 0%, #0b1020 55%, #070a14 100%); }
+  .hint { position: absolute; left: 50%; transform: translateX(-50%); top: 14px; z-index: 5; font-size: 12px; color: var(--muted); background: rgba(11,16,32,.6); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); backdrop-filter: blur(4px); pointer-events: none; }
+  svg.city { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .lbl { font: 600 12px "Segoe UI", system-ui; fill: #e9eef8; } .sub { font: 10px "Segoe UI", system-ui; fill: #8b98b3; }
+  svg * { transform-box: view-box; }
+  .star, .ripple, .jet, .tree, .plant, .lamp-glow, .sheen, .steam, .bob, .tv, .mon, .window-lit, .win, .p .torso, .p .head, .p .eye, .p .pupil, .p .arm, .p .leg, .p .body, .p .brow, .p .mouth, .p .think, .p .zzz { transform-box: fill-box; }
+  .star { animation: twinkle 3s ease-in-out infinite; transform-origin: center; }
+  .beacon { animation: beacon 2s ease-in-out infinite; }
+  .win { animation: winflick 11s ease-in-out infinite; }
+  .ripple { animation: ripple 2.6s ease-out infinite; transform-origin: center; }
+  .jet { animation: jet 1.6s ease-in-out infinite alternate; transform-origin: 50% 100%; }
+  .tree { transform-origin: 50% 100%; animation: sway 6s ease-in-out infinite alternate; }
+  @keyframes walkR { from { transform: translateX(-120px);} to { transform: translateX(3400px);} } @keyframes walkL { from { transform: translateX(3400px);} to { transform: translateX(-120px);} }
+  .car { animation: drive 18s linear infinite; } .car.back { animation: drive-back 22s linear infinite; } .wheel { animation: spin .7s linear infinite; transform-origin: center; }
+  .car.stop { animation-name: driveStop; animation-timing-function: linear; } .car.stop .wheel { animation-name: spinStop; animation-duration: inherit; animation-delay: inherit; animation-timing-function: linear; }
+  .car.stop .brake { animation-name: brake; animation-duration: inherit; animation-delay: inherit; animation-iteration-count: infinite; animation-timing-function: linear; } .bob { animation: carbob .55s ease-in-out infinite alternate; } .car .blink { animation: blink2 .8s steps(2) infinite; } .car .beam { animation: beamflick 3s ease-in-out infinite; }
+  @keyframes driveStop { 0% { transform: translateX(-300px);} 34% { transform: translateX(var(--stop));} 46% { transform: translateX(var(--stop));} 100% { transform: translateX(1700px);} }
+  @keyframes spinStop { 0% { transform: rotate(0);} 34% { transform: rotate(3600deg);} 46% { transform: rotate(3600deg);} 100% { transform: rotate(9000deg);} } @keyframes brake { 0%,30%,50%,100% { opacity: .35;} 32%,48% { opacity: 1;} }
+  @keyframes carbob { from { transform: translateY(0);} to { transform: translateY(-.8px);} } @keyframes blink2 { from { opacity: 1;} to { opacity: .1;} } @keyframes beamflick { 0%,100% { opacity: .14;} 50% { opacity: .2;} }
+  @keyframes drive { from { transform: translateX(-260px);} to { transform: translateX(1700px);} } @keyframes drive-back { from { transform: translateX(1700px);} to { transform: translateX(-260px);} } @keyframes spin { to { transform: rotate(360deg);} }
+  .floor-band { cursor: pointer; transition: filter .2s; }
+  .floor-band:hover .glass { filter: brightness(1.35); }
+  .floor-band:hover .plate { fill: #243049; }
+  .sheen { animation: sheen 9s ease-in-out infinite; }
+  .neon { animation: neon 2.4s ease-in-out infinite alternate; }
+  .cloud { animation: drift linear infinite; }
+  @keyframes twinkle { 0%,100% { opacity: .3; transform: scale(.8);} 50% { opacity: 1; transform: scale(1.2);} }
+  @keyframes beacon { 0%,100% { opacity: .2;} 50% { opacity: 1;} }
+  @keyframes winflick { 0%,93%,100% { opacity: 1;} 96% { opacity: .35;} }
+  @keyframes ripple { from { transform: scale(.3); opacity: .8;} to { transform: scale(1.7); opacity: 0;} }
+  @keyframes jet { from { transform: scaleY(.7);} to { transform: scaleY(1.15);} }
+  @keyframes sway { from { transform: rotate(-1.4deg);} to { transform: rotate(1.4deg);} }
+  @keyframes sheen { 0% { transform: translateX(-120px); opacity: 0;} 25% { opacity: .35;} 60% { opacity: .35;} 100% { transform: translateX(380px); opacity: 0;} }
+  @keyframes neon { from { opacity: .6; filter: drop-shadow(0 0 2px #ffb15c);} to { opacity: 1; filter: drop-shadow(0 0 10px #ffb15c);} }
+  @keyframes drift { from { transform: translateX(-300px);} to { transform: translateX(1700px);} }
+
+  /* nhân vật */
+  .p .torso { animation: breathe 2.6s ease-in-out infinite alternate; transform-origin: 50% 100%; }
+  .p .head { animation: headbob 2.6s ease-in-out infinite alternate; transform-origin: 50% 100%; }
+  .p .eye { animation: blink 4.5s infinite; transform-origin: center; }
+  .p .arm { transform-origin: 50% 0; } .p .leg { transform-origin: 50% 0; }
+  .p.typing .arm { animation: type .22s ease-in-out infinite alternate; } .p.typing .arm.r { animation-delay: -.11s; }
+  .p.walking .leg { animation: step .42s ease-in-out infinite alternate; } .p.walking .leg.r { animation-delay: -.42s; }
+  .p.walking .arm { animation: swing .42s ease-in-out infinite alternate; } .p.walking .arm.l { animation-delay: -.42s; }
+  .p.walking .torso { animation: lean .42s ease-in-out infinite alternate; }
+  .p.talking .arm.r { animation: talk .6s ease-in-out infinite alternate; } .p.talking .head { animation: nodyes 1s ease-in-out infinite alternate; }
+  .p.cooking .arm.r { animation: stir 1s ease-in-out infinite alternate; }
+  .p.drinking .arm.r { transform: rotate(-150deg); }
+  .p.resting .head { transform: rotate(-6deg); animation: none; }
+  .p.stretch .arm { animation: stretch 1.4s ease-in-out infinite alternate; }
+  .p.happy .torso { animation: hop .6s ease-in-out infinite alternate; } .p.happy .arm { animation: cheer .6s ease-in-out infinite alternate; }
+  .p .mood { font: 600 9px "Segoe UI", system-ui; fill: #e9eef8; } .mood-bg { fill: rgba(233,238,248,.96); } .p .mood { fill: #0b1020; }
+  .p .think { }
+  @keyframes thinkpop { from { transform: scale(0); opacity: 0;} to { transform: scale(1); opacity: 1;} }
+  .p.idle .head, .p.seated .head { animation: lookaround 7s ease-in-out infinite; } .p.idle .pupil { animation: glance 7s ease-in-out infinite; }
+  .p.seated .arm { transform: rotate(-60deg); }
+  .p.idle .body { animation: weight 3.2s ease-in-out infinite alternate; transform-origin: 50% 100%; }
+  .p.phone .arm.r { transform: rotate(-120deg); } .p.phone .head { transform: rotate(8deg) translateY(2px); animation: none; }
+  .p.resting .arm { transform: rotate(-20deg); } .p.resting .pupil { transform: translateY(.6px); }
+  .p.sleeping .eye, .p.sleeping .pupil { transform: scaleY(.12); animation: none; } .p.sleeping .mouth { opacity: .6; }
+  .p.sleeping .torso { animation: breathe 4s ease-in-out infinite alternate; }
+  .p.typing .pupil { animation: scan 1.6s ease-in-out infinite alternate; }
+  .p.talking .brow { animation: browup 1s ease-in-out infinite alternate; }
+  .p.happy .eye { transform: scaleY(.55); } .p.stretch .head { animation: nodyes 1.4s ease-in-out infinite alternate; }
+  .p.walking .head { animation: bobwalk .42s ease-in-out infinite alternate; }
+  @keyframes lookaround { 0%,35%,100% { transform: rotate(0);} 45%,60% { transform: rotate(-5deg);} 70%,85% { transform: rotate(4deg);} }
+  @keyframes glance { 0%,35%,100% { transform: translateX(0);} 45%,60% { transform: translateX(-1.4px);} 70%,85% { transform: translateX(1.2px);} }
+  @keyframes weight { from { transform: translateX(0) rotate(0);} to { transform: translateX(.8px) rotate(.8deg);} }
+  @keyframes scan { from { transform: translateX(-.8px);} to { transform: translateX(.8px);} }
+  @keyframes browup { from { transform: translateY(0);} to { transform: translateY(-1.2px);} }
+  @keyframes bobwalk { from { transform: translateY(0);} to { transform: translateY(-1.6px) rotate(1.5deg);} }
+  .mon { animation: mon 2.4s ease-in-out infinite; } .tv { animation: tv 1.1s steps(2) infinite; } .steam { animation: steam 2.2s ease-out infinite; }
+  @keyframes breathe { from { transform: scaleY(1);} to { transform: scaleY(1.03);} }
+  @keyframes headbob { from { transform: translateY(0);} to { transform: translateY(-1.2px);} }
+  @keyframes blink { 0%,92%,100% { transform: scaleY(1);} 95% { transform: scaleY(.08);} }
+  @keyframes type { from { transform: rotate(-70deg);} to { transform: rotate(-82deg);} }
+  @keyframes step { from { transform: rotate(-26deg);} to { transform: rotate(26deg);} }
+  @keyframes swing { from { transform: rotate(22deg);} to { transform: rotate(-22deg);} }
+  @keyframes lean { from { transform: rotate(2deg);} to { transform: rotate(-2deg) translateY(-1.5px);} }
+  @keyframes talk { from { transform: rotate(-40deg);} to { transform: rotate(-70deg);} }
+  @keyframes nodyes { from { transform: rotate(-3deg);} to { transform: rotate(4deg) translateY(1px);} }
+  @keyframes stir { from { transform: rotate(-60deg);} to { transform: rotate(-95deg);} }
+  @keyframes stretch { from { transform: rotate(160deg);} to { transform: rotate(185deg);} }
+  @keyframes hop { from { transform: translateY(0);} to { transform: translateY(-4px);} }
+  @keyframes cheer { from { transform: rotate(150deg);} to { transform: rotate(175deg);} }
+  @keyframes mon { 0%,100% { opacity: .6;} 50% { opacity: 1;} }
+  @keyframes tv { from { opacity: .5;} to { opacity: .9;} }
+  @keyframes steam { 0% { transform: translateY(0) scale(.6); opacity: .6;} 100% { transform: translateY(-16px) scale(1.2); opacity: 0;} }
+
+  /* popup */
+  .overlay { position: fixed; inset: 0; background: rgba(4,7,16,.6); backdrop-filter: blur(6px); display: none; place-items: center; z-index: 50; padding: 16px; }
+  .overlay.open { display: grid; }
+  .modal { width: min(900px, 100%); max-height: 92vh; overflow: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 30px 80px rgba(0,0,0,.6); animation: in .18s ease-out; }
+  @keyframes in { from { transform: translateY(12px) scale(.98); opacity: 0;} to { transform: none; opacity: 1;} }
+  .modal header { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--panel); z-index: 1; }
+  .modal header h3 { margin: 0; font-size: 15px; } .modal header .fine { margin-left: 6px; }
+  .modal .body { padding: 14px 18px; }
+  .office { width: 100%; aspect-ratio: 900 / 560; background: radial-gradient(600px 300px at 50% 20%, #1a2342, #0b1020); border-radius: 12px; border: 1px solid var(--line); overflow: hidden; }
+  .office svg { width: 100%; height: 100%; display: block; }
+  .legend { display: flex; gap: 12px; font-size: 11px; color: var(--muted); margin-top: 8px; flex-wrap: wrap; }
+  .legend i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; } th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); } th { color: var(--muted); font-weight: 600; font-size: 12px; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; background: #243049; }
+  textarea, select, input.f { background: #0b1020; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; font: inherit; padding: 6px 8px; }
+
+  @media (max-width: 760px) {
+    .app { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+    .side { border-right: 0; border-bottom: 1px solid var(--line); max-height: 42vh; }
+    .work { padding: 10px 16px; gap: 8px; }
+    .nav { grid-template-columns: repeat(4, 1fr); padding: 8px 16px; } .nav button { padding: 8px 4px; font-size: 12px; }
+    .note { display: none; } .hint { font-size: 11px; top: 8px; white-space: nowrap; }
+    .modal .body { padding: 10px; } .office { aspect-ratio: 900 / 620; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="side-head">
+      <div class="logo">T</div>
+      <div class="brand">TNF Controller<small>bản mẫu · dữ liệu giả</small></div>
+      <button class="icon-btn" title="Cài đặt" data-open="settings">⚙</button>
+    </div>
+    <div class="work">
+      <div>
+        <h4>Cửa sổ làm việc</h4>
+        <div class="cmd"><input placeholder="Ra lệnh bằng một câu tiếng Việt…"><button class="btn" data-open="command">Gửi</button></div>
+      </div>
+      <div class="card">
+        <h4>TNF Tower · môi trường <button class="mini" id="add-env">＋ Thêm tầng</button></h4>
+        <div id="s-envs"></div>
+      </div>
+      <div class="card">
+        <h4>Thông báo</h4>
+        <div id="s-log" class="fine" style="display:flex;flex-direction:column;gap:3px"></div>
+      </div>
+    </div>
+    <nav class="nav">
+      <button data-open="runs">Run</button><button data-open="history">Lịch sử</button><button data-open="library">Thư viện</button><button data-open="settings">Cài đặt</button>
+    </nav>
+    <div class="note">Chi phí hiển thị là ước tính, không phải hóa đơn.</div>
+  </aside>
+
+  <main class="scene">
+    <div class="hint">Bấm vào một tầng để xem văn phòng bên trong</div>
+    <svg class="city" viewBox="0 0 1400 846" preserveAspectRatio="xMidYMax meet" aria-label="Khu tháp TNF ban đêm">
+      <defs>
+        <linearGradient id="gGlass" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#1d3a6b"/><stop offset=".5" stop-color="#15294d"/><stop offset="1" stop-color="#0f1d3a"/></linearGradient>
+        <linearGradient id="gGlassDim" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#1a2440"/><stop offset="1" stop-color="#0d1326"/></linearGradient>
+        <linearGradient id="gSideT" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#0c1630"/><stop offset="1" stop-color="#060b1a"/></linearGradient>
+        <linearGradient id="gGold" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#b8924a"/><stop offset=".5" stop-color="#f0d58f"/><stop offset="1" stop-color="#b8924a"/></linearGradient>
+        <linearGradient id="gGround" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#121a30"/><stop offset="1" stop-color="#05080f"/></linearGradient>
+        <linearGradient id="gFade" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".6"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+        <linearGradient id="gSheen" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".5"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+        <radialGradient id="gLampU"><stop offset="0" stop-color="#d9b26a" stop-opacity=".55"/><stop offset="1" stop-color="#d9b26a" stop-opacity="0"/></radialGradient>
+        <linearGradient id="gCarShade" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".28"/></linearGradient><radialGradient id="gLeaf" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#4fbf7f"/><stop offset=".55" stop-color="#2a7a52"/><stop offset="1" stop-color="#143826"/></radialGradient><radialGradient id="gLeaf2" cx=".4" cy=".25" r=".8"><stop offset="0" stop-color="#3a9a68"/><stop offset="1" stop-color="#102e1f"/></radialGradient><linearGradient id="gUp" x1="0" x2="0" y1="1" y2="0"><stop offset="0" stop-color="#ffd9a3" stop-opacity=".35"/><stop offset="1" stop-color="#ffd9a3" stop-opacity="0"/></linearGradient><radialGradient id="gWater"><stop offset="0" stop-color="#6fb7ff"/><stop offset="1" stop-color="#1f4f8f"/></radialGradient>
+        <radialGradient id="gMoon"><stop offset="0" stop-color="#fff5d6"/><stop offset=".55" stop-color="#f3e3b5"/><stop offset="1" stop-color="#f3e3b5" stop-opacity="0"/></radialGradient>
+        <mask id="mReflect"><rect x="0" y="560" width="1400" height="240" fill="url(#gFade)"/></mask>
+        <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#000" flood-opacity=".6"/></filter>
+        <filter id="glowG" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter>
+      </defs>
+      <g id="stars"></g>
+      <circle cx="1180" cy="120" r="70" fill="url(#gMoon)" opacity=".5"/><circle cx="1180" cy="120" r="26" fill="#fff5d6"/>
+      <g class="cloud" style="animation-duration:160s"><ellipse cx="0" cy="150" rx="160" ry="10" fill="#fff" opacity=".05"/></g>
+      <g id="skyline"></g>
+      <!-- mặt đất bóng + phản chiếu -->
+      <rect x="-3000" y="560" width="7200" height="3000" fill="url(#gGround)"/>
+      <g id="reflect" mask="url(#mReflect)" opacity="0"></g>
+      <!-- quảng trường -->
+      <g id="plaza"></g>
+      <!-- hai tòa tháp -->
+      <g id="towers"></g>
+      <!-- tiền cảnh: cây phố, đèn, xe, người (vẽ sau tháp) -->
+      <g id="fg"></g>
+    </svg>
+  </main>
+</div>
+
+<div class="overlay" id="overlay"><div class="modal" role="dialog" aria-modal="true"><header><h3 id="m-title">…</h3><span class="fine" id="m-sub"></span><button class="icon-btn" id="m-close" title="Đóng (Esc)" style="margin-left:auto">✕</button></header><div class="body" id="m-body"></div></div></div>
+
+<script>
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (tag, attrs = {}, children = []) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); for (const c of children) n.appendChild(c); return n; };
+  const txt = (x, y, s, cls, extra = {}) => { const t = el('text', { x, y, class: cls || '', 'text-anchor': 'middle', ...extra }); t.textContent = s; return t; };
+  const rnd = (a, b) => a + Math.random() * (b - a); const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const STATUS = { free: '#8b98b3', doing: '#5aa0ff', done: '#2ed47a', off: '#ffc542' };
+
+  /* ===== agent tròn mặc vest: đứng / ngồi ghế (quay lưng) / ngồi sofa / nằm ===== */
+  const LOOK = { analyst: ['#8b5cf6', 3, '#2b1d14', '#f3cdb0'], planner: ['#ff9f43', 1, '#5a2a1a', '#e8b894'], critic: ['#ff5c5c', 2, '#111', '#f3cdb0'], implementer: ['#5aa0ff', 0, '#2b1d14', '#d9a983'], qa: ['#2ed47a', 2, '#3a2416', '#f3cdb0'], debug: ['#ffc542', 1, '#6b4a2a', '#e8b894'], searcher: ['#ff9f43', 0, '#3a2416', '#f3cdb0'], analyzer: ['#2ed47a', 2, '#111', '#d9a983'], synthesizer: ['#8b5cf6', 3, '#2b1d14', '#f3cdb0'], writer: ['#ff5c5c', 1, '#6b4a2a', '#e8b894'], editor: ['#5aa0ff', 2, '#111', '#f3cdb0'], seo: ['#ffc542', 0, '#2b1d14', '#d9a983'], coordinator: ['#d9b26a', 1, '#111', '#f3cdb0'] };
+  const shade = (hex, k) => { const n = parseInt(hex.slice(1), 16); const r = Math.max(0, Math.min(255, ((n >> 16) & 255) * k)), g = Math.max(0, Math.min(255, ((n >> 8) & 255) * k)), b = Math.max(0, Math.min(255, (n & 255) * k)); return `rgb(${r | 0},${g | 0},${b | 0})`; };
+  const SUIT = '#1c2437', SUIT_L = '#2a3450', PANTS = '#3a4360';
+  function person({ tie = '#5aa0ff', skin = '#f3cdb0', hair = '#2b1d14', hairStyle = 0, state = 'idle', pose = 'stand', face = 1, back = false, mood = '', prop = '', badge = false }) {
+    const g = el('g', { class: `p ${state} pose-${pose}${back ? ' back' : ''}` }); const f = face;
+    const body = el('g', { class: 'body' });
+    if (pose !== 'lie') body.appendChild(el('ellipse', { cx: 0, cy: 1, rx: 16, ry: 4.5, fill: '#000', opacity: .35 }));
+    // chân ngắn tròn
+    const legY = pose === 'stand' ? -10 : -8;
+    if (!(back && pose === 'sit')) ['l', 'r'].forEach((s, i) => { const x = i ? 3 : -9; const leg = el('g', { class: `leg ${s}`, transform: `translate(${x + 3},${legY})` });
+      if (pose === 'stand') { leg.appendChild(el('rect', { x: -3.5, y: 0, width: 7, height: 10, rx: 3, fill: PANTS })); leg.appendChild(el('path', { d: 'M-4.5 8 h9 q3 0 3 3 h-12z', fill: '#0d1019' })); leg.appendChild(el('path', { d: 'M-3 9.5 h6', stroke: '#8b96a8', 'stroke-width': 1, opacity: .7 })); }
+      else { leg.appendChild(el('path', { d: `M-3.5 0 h7 l${7 * f} 2 l${-7 * f} 6 h-7z`, fill: PANTS })); leg.appendChild(el('rect', { x: 7 * f - 3, y: 2, width: 6, height: 8, rx: 2, fill: shade(PANTS, .85) })); leg.appendChild(el('path', { d: `M${7 * f - 4} 9 h8 q3 0 3 3 h-11z`, fill: '#0d1019' })); } body.appendChild(leg); });
+    // thân tròn: áo vest, ve áo, sơ mi, cà vạt màu vai, nút
+    const torso = el('g', { class: 'torso' }); const cy = pose === 'stand' ? -27 : -25;
+    torso.appendChild(el('ellipse', { cx: 0, cy, rx: 17, ry: 19, fill: SUIT }));
+    torso.appendChild(el('path', { d: `M${-9 * f} ${cy - 19} q${-10 * f} 6 ${-12 * f} 20 q${2 * f} 10 ${8 * f} 16`, fill: 'none', stroke: '#000', 'stroke-width': 4, opacity: .12 }));
+    if (!back) {
+      torso.appendChild(el('path', { d: `M-7 ${cy - 18} l7 22 l7 -22 q-7 -3 -14 0z`, fill: '#f4f6fa' }));                       // sơ mi
+      torso.appendChild(el('path', { d: `M-8 ${cy - 19} l8 10 l-3 10 l-6 -8 q-3 -8 1 -12z M8 ${cy - 19} l-8 10 l3 10 l6 -8 q3 -8 -1 -12z`, fill: SUIT_L })); // ve áo
+      torso.appendChild(el('path', { d: `M-2.2 ${cy - 10} h4.4 l1.2 12 l-3.4 5 l-3.4 -5z`, fill: tie }));                       // cà vạt
+      torso.appendChild(el('path', { d: `M-2.2 ${cy - 10} h4.4 l-2.2 2.5z`, fill: shade(tie, .7) }));
+      torso.appendChild(el('circle', { cx: 0, cy: cy + 9, r: 1.2, fill: '#d9b26a' }));
+      if (badge) torso.appendChild(el('rect', { x: 8, y: cy - 4, width: 6, height: 4, rx: 1, fill: '#d9b26a' }));
+    } else { torso.appendChild(el('path', { d: `M0 ${cy - 17} v34`, stroke: '#000', 'stroke-width': 1.2, opacity: .25 })); torso.appendChild(el('path', { d: `M-17 ${cy} q17 -8 34 0`, stroke: '#fff', 'stroke-width': 1, opacity: .08, fill: 'none' })); }
+    const arm = (cls) => { const a = el('g', { class: `arm ${cls}` }); a.appendChild(el('path', { d: 'M-4 0 h8 v13 q0 4 -4 4 q-4 0 -4 -4z', fill: SUIT })); a.appendChild(el('rect', { x: -3.2, y: 12, width: 6.4, height: 3, fill: '#f4f6fa' })); a.appendChild(el('circle', { cx: 0, cy: 18, r: 4, fill: skin }));
+      if (cls === 'r' && prop === 'cup') a.appendChild(el('path', { d: 'M-4 15 h9 v9 q0 1 -1 1 h-7 q-1 0 -1 -1z', fill: '#fff' }));
+      if (cls === 'r' && prop === 'mug') a.appendChild(el('path', { d: 'M-4 15 h9 v9 q0 1 -1 1 h-7 q-1 0 -1 -1z M5 17 q4 0 4 3 q0 3 -4 3', fill: '#d9b26a', stroke: '#d9b26a' }));
+      if (cls === 'r' && prop === 'phone') a.appendChild(el('rect', { x: -3, y: 13, width: 6, height: 10, rx: 1.5, fill: '#0b1020', stroke: '#9cc4ff', 'stroke-width': .8 }));
+      return a; };
+    torso.appendChild(el('g', { transform: `translate(${-16 * f},${cy - 8})` }, [arm('l')])); torso.appendChild(el('g', { transform: `translate(${16 * f},${cy - 8})` }, [arm('r')]));
+    body.appendChild(torso);
+    // đầu tròn to
+    const head = el('g', { class: 'head' }); const hy = cy - 32;
+    head.appendChild(el('circle', { cx: 0, cy: hy, r: 15, fill: skin }));
+    head.appendChild(el('path', { d: `M${-15 * f} ${hy} a15 15 0 0 ${f > 0 ? 1 : 0} ${30 * f} 0 a15 15 0 0 ${f > 0 ? 1 : 0} ${-30 * f} 0z M${-10 * f} ${hy} a10 10 0 0 ${f > 0 ? 0 : 1} ${20 * f} 0`, fill: '#000', opacity: .06 }));
+    const hairs = ['M-15 {y} q0 -17 15 -17 q15 0 15 17 q-4 -8 -15 -8 q-11 0 -15 8z', 'M-16 {y} q-2 -20 16 -20 q18 0 16 20 q-3 -10 -9 -12 q-9 1 -23 12z M-16 {y} q-3 7 -2 14 l5 -3z', 'M-15 {y} q2 -17 15 -17 q13 0 15 17 l-3 2 q-4 -9 -12 -9 q-8 0 -12 9z M-15 {y} v12 q-2 -7 0 -12z M15 {y} v12 q2 -7 0 -12z', 'M-16 {y} q0 -19 16 -19 q16 0 16 19 q-8 -5 -16 -5 q-8 0 -16 5z M10 {y} q10 -4 8 12'];
+    head.appendChild(el('path', { d: hairs[hairStyle % hairs.length].replace(/\{y\}/g, hy - 4), fill: hair }));
+    head.appendChild(el('path', { d: `M${-7 * f} ${hy - 19} q${5 * f} -3 ${11 * f} -1`, stroke: '#fff', 'stroke-width': 1.5, fill: 'none', opacity: .22, 'stroke-linecap': 'round' }));
+    if (!back) {
+      head.appendChild(el('ellipse', { cx: -15 * f, cy: hy + 1, rx: 2.6, ry: 3.6, fill: skin }));
+      const ex = 5 * f;
+      [[ex - 8], [ex + 1]].forEach(([cx]) => { head.appendChild(el('ellipse', { class: 'eye', cx, cy: hy + 1, rx: 2.6, ry: 3.2, fill: '#fff' })); head.appendChild(el('ellipse', { class: 'pupil', cx: cx + .7 * f, cy: hy + 1.5, rx: 1.4, ry: 2, fill: '#1a1f2e' })); head.appendChild(el('circle', { cx: cx + 1.2 * f, cy: hy + .4, r: .55, fill: '#fff' })); });
+      head.appendChild(el('path', { class: 'brow', d: `M${ex - 11} ${hy - 4.5} q3 -2.5 6.5 -.5`, stroke: hair, 'stroke-width': 1.6, fill: 'none', 'stroke-linecap': 'round' })); head.appendChild(el('path', { class: 'brow', d: `M${ex - 2} ${hy - 5} q3 -2 6.5 0`, stroke: hair, 'stroke-width': 1.6, fill: 'none', 'stroke-linecap': 'round' }));
+      const mouth = state === 'happy' || state === 'talking' ? `M${ex - 8} ${hy + 8} q4.5 5 9 0` : state === 'sleeping' ? `M${ex - 5} ${hy + 9} q2 1 4 0` : `M${ex - 7} ${hy + 8} q3.5 2.5 7 0`;
+      head.appendChild(el('path', { class: 'mouth', d: mouth, stroke: '#b5604f', 'stroke-width': 1.4, fill: 'none', 'stroke-linecap': 'round' }));
+      head.appendChild(el('ellipse', { cx: ex - 10, cy: hy + 6, rx: 2.6, ry: 1.5, fill: '#ff8a8a', opacity: .3 })); head.appendChild(el('ellipse', { cx: ex + 3, cy: hy + 6, rx: 2.6, ry: 1.5, fill: '#ff8a8a', opacity: .3 }));
+    } else { head.appendChild(el('path', { d: `M-15 ${hy - 4} q0 -17 15 -17 q15 0 15 17 q0 8 -3 12 q-12 -3 -24 0 q-3 -4 -3 -12z`, fill: hair })); head.appendChild(el('ellipse', { cx: 15 * f, cy: hy + 1, rx: 2.6, ry: 3.6, fill: skin })); head.appendChild(el('ellipse', { cx: -15 * f, cy: hy + 1, rx: 2.6, ry: 3.6, fill: skin })); }
+    body.appendChild(head);
+    if (pose === 'lie') g.appendChild(el('g', { transform: 'translate(0,-10) rotate(118)', style: 'transform-box: view-box; transform-origin: 0 0' }, [body])); else g.appendChild(body);
+    if (state === 'sleeping') [['zzz', 14, -40, 11], ['zzz b', 20, -48, 9]].forEach(([c, x, y, s]) => g.appendChild(txt(x * f, y, 'z', c, { fill: '#9fb0c8', 'font-size': s, 'font-weight': 700 })));
+    // bong bóng suy nghĩ
+    if (mood) { const w = mood.length * 5.4 + 16; const top = pose === 'lie' ? -62 : hy - 40; const m = el('g', { class: 'think', transform: `translate(${6 * f},${top})` }); m.appendChild(el('circle', { cx: -8 * f, cy: 16, r: 2, class: 'mood-bg' })); m.appendChild(el('circle', { cx: -4 * f, cy: 10, r: 3, class: 'mood-bg' })); m.appendChild(el('rect', { class: 'mood-bg', x: -w / 2, y: -10, width: w, height: 17, rx: 8.5 })); m.appendChild(txt(0, 2.5, mood, 'mood')); g.appendChild(m); }
+    return g;
+  }
+
+  /* ===== môi trường, lưới đi được, tìm đường, máy trạng thái ===== */
+  const ENV_PRESETS = [
+    { id: 'coding', name: 'controller · run lập trình', kind: 'coding', roles: [['analyst', 'Phân tích'], ['planner', 'Kế hoạch'], ['critic', 'Phản biện'], ['implementer', 'Thực thi'], ['qa', 'Kiểm thử'], ['debug', 'Gỡ lỗi']], flow: ['analyst', 'planner', 'critic', 'implementer', 'qa'] },
+    { id: 'research', name: 'nghiên cứu · giá thép Q4', kind: 'research', roles: [['searcher', 'Tìm kiếm'], ['analyzer', 'Phân tích'], ['synthesizer', 'Tổng hợp']], flow: ['searcher', 'analyzer', 'synthesizer'] },
+    { id: 'content', name: 'nội dung web · bài SEO', kind: 'research', roles: [['writer', 'Viết bài'], ['editor', 'Biên tập'], ['seo', 'SEO']], flow: ['writer', 'editor', 'seo'] },
+  ];
+  const ROOM = { W: 12, D: 9, H: 150 }, RES = .5, COLS = ROOM.W / RES, ROWS = ROOM.D / RES;
+  // ghế ở PHÍA TRƯỚC bàn (v lớn hơn), người ngồi quay lưng về người xem, mặt hướng vào màn hình
+  const FURN = {
+    coordDesk: { u: 1.0, v: 1.5, w: 2.4, d: .9 }, coordSeat: { u: 2.2, v: 3.15, face: 1, back: true }, coordSide: { u: 4.0, v: 3.15, face: -1 },
+    desk: (i) => { const col = i % 3, row = i < 3 ? 0 : 1, u = 1.4 + col * 2.4, v = row ? 6.6 : 4.2; return { u, v, w: 1.6, d: .8, seat: { u: u + .8, v: v + .8 + .75, face: 1, back: true } }; },
+    cooler: { u: .3, v: 6.0, w: .5, d: .5 }, coolerSpot: { u: 1.2, v: 6.3, face: -1 },
+    sofa: { u: 9.0, v: 6.1, w: 2.4, d: .9 }, sofaSit: { u: 9.7, v: 7.12, face: -1 }, sofaLie: { u: 9.25, v: 6.6, face: 1 },
+    table: { u: 9.3, v: 7.6, w: 1.6, d: .7 }, counter: { u: 8.2, v: .2, w: 3.2, d: .9 }, coffeeSpot: { u: 9.7, v: 1.6, face: 1, back: true }, fridge: { u: 11.4, v: .2, w: .6, d: .9 },
+    plants: [{ u: .3, v: .3, w: .6, d: .6 }, { u: 11.1, v: 5.0, w: .6, d: .6 }, { u: 11.1, v: 8.2, w: .6, d: .6 }],
+    lanes: [3.7, 6.3, 8.6],
+  };
+  const cellKey = (u, v) => `${Math.floor(u / RES)},${Math.floor(v / RES)}`;
+  function buildGrid(env) {
+    const blocked = new Set(); const block = (r) => { for (let cu = Math.floor(r.u / RES); cu < Math.ceil((r.u + r.w) / RES); cu++) for (let cv = Math.floor(r.v / RES); cv < Math.ceil((r.v + r.d) / RES); cv++) blocked.add(`${cu},${cv}`); };
+    [FURN.coordDesk, FURN.cooler, FURN.sofa, FURN.table, FURN.counter, FURN.fridge, ...FURN.plants].forEach(block); env.roles.forEach((_, i) => { const d = FURN.desk(i); block(d); blocked.add(cellKey(d.seat.u, d.seat.v)); }); blocked.add(cellKey(FURN.coordSeat.u, FURN.coordSeat.v));
+    env.blocked = blocked;
+  }
+  const isFree = (env, u, v) => u >= 0 && v >= 0 && u < ROOM.W && v < ROOM.D && !env.blocked.has(cellKey(u, v));
+  const cellOf = (p) => [Math.max(0, Math.min(COLS - 1, Math.floor(p.u / RES))), Math.max(0, Math.min(ROWS - 1, Math.floor(p.v / RES)))];
+  function findPath(env, from, to) {
+    const [su, sv] = cellOf(from), [tu, tv] = cellOf(to); const key = (u, v) => `${u},${v}`; const free = (u, v) => u >= 0 && v >= 0 && u < COLS && v < ROWS && !env.blocked.has(key(u, v));
+    if (su === tu && sv === tv) return [to];
+    const prev = new Map([[key(su, sv), null]]); const q = [[su, sv]]; let found = false;
+    while (q.length) { const [u, v] = q.shift(); if (u === tu && v === tv) { found = true; break; }
+      for (const [du, dv] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) { const nu = u + du, nv = v + dv, k = key(nu, nv); if (prev.has(k)) continue; const goal = nu === tu && nv === tv; if (!goal && !free(nu, nv)) continue; if (du && dv && (!free(u + du, v) || !free(u, v + dv))) continue; prev.set(k, key(u, v)); q.push([nu, nv]); } }
+    if (!found) return null;
+    const cells = []; let k = key(tu, tv); while (k) { cells.push(k); k = prev.get(k); } cells.reverse();
+    const pts = cells.slice(1, -1).map((c) => { const [u, v] = c.split(',').map(Number); return { u: (u + .5) * RES, v: (v + .5) * RES }; }); pts.push({ u: to.u, v: to.v }); return pts;
+  }
+  const envs = [], log = [];
+  function addEnv(preset) {
+    const env = { ...preset, roles: preset.roles.map(([id, label]) => ({ id, label })), step: -1, cooldown: rnd(1, 3), agents: [] };
+    buildGrid(env);
+    env.roles.forEach((r, i) => { const d = FURN.desk(i); env.agents.push({ id: r.id, label: r.label, env, u: d.seat.u, v: d.seat.v, path: [], face: 1, back: true, mode: 'free', act: 'seated', pose: 'sit', timer: rnd(4, 12), mood: '', desk: d }); });
+    env.coord = { id: 'coordinator', label: 'Điều phối', env, u: FURN.coordSeat.u, v: FURN.coordSeat.v, act: 'typing', pose: 'sit', back: true, mood: '', face: 1, path: [], timer: 9, badge: true };
+    envs.push(env); buildTowers(); refreshSide();
+  }
+  const SPEED = 1.5;
+  function goTo(a, t, then) { const p = findPath(a.env, a, t); if (!p) { setAct(a, 'idle', 1); return false; } a.path = p; a.then = then; a.act = 'walking'; a.pose = 'stand'; a.back = false; a.mood = ''; a.endFace = t.face; a.endBack = !!t.back; return true; }
+  function setAct(a, act, secs, mood = '', pose = 'stand', face, back = false) { a.act = act; a.timer = secs; a.mood = mood; a.pose = pose; a.back = back; a.path = []; if (face) a.face = face; }
+  function freeSpotNear(env, u, v) { for (const [du, dv] of [[.9, 0], [-.9, 0], [0, .9], [0, -.9], [.9, .9], [-.9, -.9]]) if (isFree(env, u + du, v + dv)) return { u: u + du, v: v + dv }; return null; }
+  function leisure(a) {
+    const env = a.env; const others = env.agents.filter((b) => b !== a && b.mode === 'free' && b.act !== 'walking' && b.pose === 'stand');
+    const sofaBusy = env.agents.some((b) => b !== a && (b.pose === 'sofa' || b.pose === 'lie' || (b.goal === 'sofa' && b.act === 'walking')));
+    const atDesk = a.pose === 'sit' && Math.abs(a.u - a.desk.seat.u) < .1;
+    const c = atDesk ? pick(['desk', 'desk', 'cooler', 'sofa', 'kitchen', 'stretch', 'chat', 'wander', 'phone']) : pick(['desk', 'desk', 'desk', 'cooler', 'kitchen', 'chat', 'phone']);
+    a.goal = c;
+    if (c === 'desk') { if (atDesk) setAct(a, 'seated', rnd(6, 14), Math.random() < .3 ? pick(['đọc tài liệu', 'xem email', 'ghi chú']) : '', 'sit', 1, true); else goTo(a, a.desk.seat, () => setAct(a, 'seated', rnd(8, 16), '', 'sit', 1, true)); }
+    else if (c === 'cooler') goTo(a, FURN.coolerSpot, () => setAct(a, 'drinking', rnd(2.5, 4), 'uống nước', 'stand', -1));
+    else if (c === 'sofa' && !sofaBusy) { const lie = Math.random() < .25; goTo(a, lie ? FURN.sofaLie : FURN.sofaSit, () => setAct(a, lie ? 'sleeping' : 'resting', rnd(6, 10), lie ? 'nằm nghỉ' : pick(['nghỉ chút', 'xem tin', 'thư giãn']), lie ? 'lie' : 'sofa', -1)); }
+    else if (c === 'kitchen') goTo(a, FURN.coffeeSpot, () => setAct(a, 'cooking', rnd(4, 6), 'pha cà phê', 'stand', 1, true));
+    else if (c === 'stretch') { if (atDesk) setAct(a, 'stretch', rnd(2, 3), 'vươn vai', 'sit', 1, true); else setAct(a, 'stretch', rnd(2, 3), 'vươn vai'); }
+    else if (c === 'phone') setAct(a, 'phone', rnd(3, 5), pick(['nhắn tin', 'xem điện thoại']), a.pose, a.face, a.back);
+    else if (c === 'chat' && others.length) { const o = pick(others); const s = freeSpotNear(env, o.u, o.v); if (s) { const side = s.u > o.u ? 1 : -1; goTo(a, { ...s, face: -side }, () => { setAct(a, 'talking', rnd(3, 5), pick(['trò chuyện', 'hỏi thăm', 'bàn việc']), 'stand', -side); o.face = side; if (o.act === 'idle') setAct(o, 'talking', 3, '', 'stand', side); }); } else setAct(a, 'idle', 1.5); }
+    else { let t = null; for (let k = 0; k < 8 && !t; k++) { const u = rnd(1.2, 8.4), v = pick(FURN.lanes) + rnd(-.2, .2); if (isFree(env, u, v)) t = { u, v, face: pick([1, -1]) }; } if (t) goTo(a, t, () => setAct(a, 'idle', rnd(1.5, 3.5))); else setAct(a, 'idle', 1.5); }
+  }
+  const TASKS = ['đọc mã', 'viết test', 'tra cứu', 'so sánh', 'ghi chú', 'chạy thử'];
+  function assign(env, a) {
+    a.mode = 'assigned'; a.goal = 'work';
+    goTo(a, FURN.coordSide, () => { setAct(a, 'talking', 1.8, `nhận việc: ${a.label}`, 'stand', -1); env.coord.mood = `giao: ${a.label}`; env.coord.act = 'talking'; env.coord.timer = 2; env.coord.face = 1;
+      a.then = () => goTo(a, a.desk.seat, () => { setAct(a, 'typing', rnd(6, 9), `${a.label}: ${pick(TASKS)}`, 'sit', 1, true); a.mode = 'working';
+        a.then = () => { a.mode = 'reporting'; goTo(a, FURN.coordSide, () => { setAct(a, 'happy', 1.6, `${a.label} xong ✓`, 'stand', -1); env.coord.mood = `nhận: ${a.label} ✓`; env.coord.act = 'talking'; env.coord.timer = 2;
+          a.then = () => { a.mode = 'free'; a.done = true; env.step++; env.cooldown = 1.2; log.push(`${env.name.split(' · ')[0]}: ${a.label} xong`); leisure(a); }; }); }; }); });
+  }
+  function tickEnv(env, dt) {
+    env.cooldown -= dt;
+    if (env.cooldown <= 0 && !env.agents.some((a) => a.mode !== 'free')) {
+      if (env.step + 1 < env.flow.length) { const next = env.agents.find((a) => a.id === env.flow[env.step + 1]); if (next) { assign(env, next); env.cooldown = 99; } }
+      else { log.push(`${env.name.split(' · ')[0]}: run xong · verdict PASS`); env.step = -1; env.agents.forEach((a) => (a.done = false)); env.cooldown = rnd(6, 10); env.coord.mood = 'run xong · chờ lệnh'; env.coord.act = 'talking'; env.coord.timer = 3; }
+    }
+    env.agents.forEach((a) => {
+      if (a.act === 'walking') {
+        const t = a.path[0]; if (!t) { const th = a.then; a.then = null; if (a.endFace) a.face = a.endFace; th ? th() : setAct(a, 'idle', 1); return; }
+        const du = t.u - a.u, dv = t.v - a.v, d = Math.hypot(du, dv), s = SPEED * dt;
+        const sx = du - dv; if (Math.abs(sx) > .05) a.face = sx > 0 ? 1 : -1; a.back = (du + dv) < -0.05;   // đi về phía tường = thấy lưng
+        if (d <= s) { a.u = t.u; a.v = t.v; a.path.shift(); if (!a.path.length) { const th = a.then; a.then = null; if (a.endFace) a.face = a.endFace; a.back = a.endBack; th ? th() : setAct(a, 'idle', 1); } }
+        else { a.u += du / d * s; a.v += dv / d * s; }
+      } else { a.timer -= dt; if (a.timer <= 0) { const th = a.then; a.then = null; if (th) th(); else if (a.mode === 'free') leisure(a); } }
+    });
+    env.coord.timer -= dt; if (env.coord.timer <= 0) { env.coord.mood = ''; env.coord.act = 'typing'; env.coord.timer = 99; env.coord.face = 1; }
+  }
+
+  /* ===== VĂN PHÒNG ISOMETRIC ===== */
+  const T = 44, CU = .866, CV = .5, ORIGIN = { x: 450, y: 118 };
+  const iso = (u, v, z = 0) => ({ x: ORIGIN.x + (u - v) * T * CU, y: ORIGIN.y + (u + v) * T * CV - z });
+  const P = (pts) => pts.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  function box(u, v, w, d, h, color, opts = {}) {
+    const g = el('g', opts); const top = shade(color, 1.18), left = shade(color, .62), right = shade(color, .82);
+    const a = iso(u, v, h), b = iso(u + w, v, h), c = iso(u + w, v + d, h), e = iso(u, v + d, h), a0 = iso(u, v + d), b0 = iso(u + w, v + d), c0 = iso(u + w, v);
+    g.appendChild(el('polygon', { points: P([e, c, b0, a0]), fill: left })); g.appendChild(el('polygon', { points: P([b, c, b0, c0]), fill: right })); g.appendChild(el('polygon', { points: P([a, b, c, e]), fill: top }));
+    g.appendChild(el('polyline', { points: P([e, c, b]), fill: 'none', stroke: '#fff', 'stroke-width': .8, opacity: .18 }));
+    return g;
+  }
+  const dropShadow = (u, v, w, d) => el('polygon', { points: P([iso(u - .1, v - .1), iso(u + w + .15, v - .1), iso(u + w + .15, v + d + .15), iso(u - .1, v + d + .15)]), fill: '#000', opacity: .28 });
+  const wallPanel = (side, a, b, z0, z1, attrs) => el('polygon', { points: side === 'L' ? P([iso(0, a, z1), iso(0, b, z1), iso(0, b, z0), iso(0, a, z0)]) : P([iso(a, 0, z1), iso(b, 0, z1), iso(b, 0, z0), iso(a, 0, z0)]), ...attrs });
+  function drawOffice(svg, env) {
+    svg.innerHTML = '';
+    const defs = el('defs'); defs.innerHTML = `<linearGradient id="oWin" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#1e3566"/><stop offset=".7" stop-color="#4a3566"/><stop offset="1" stop-color="#b0633e"/></linearGradient><radialGradient id="oMon"><stop offset="0" stop-color="#8ab4ff" stop-opacity=".45"/><stop offset="1" stop-color="#8ab4ff" stop-opacity="0"/></radialGradient><radialGradient id="oLamp"><stop offset="0" stop-color="#ffe2b8" stop-opacity=".22"/><stop offset="1" stop-color="#ffe2b8" stop-opacity="0"/></radialGradient><linearGradient id="oGlass" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#9cc4ff" stop-opacity=".35"/><stop offset="1" stop-color="#9cc4ff" stop-opacity=".08"/></linearGradient>`; svg.appendChild(defs);
+    const back = el('g'), items = el('g', { id: 'items' }), front = el('g'); svg.appendChild(back); svg.appendChild(items); svg.appendChild(front);
+    const H = ROOM.H;
+    back.appendChild(wallPanel('L', 0, ROOM.D, 0, H, { fill: '#1a2340' })); back.appendChild(wallPanel('R', 0, ROOM.W, 0, H, { fill: '#212c4d' }));
+    back.appendChild(wallPanel('L', 0, ROOM.D, 0, 10, { fill: '#2b3860' })); back.appendChild(wallPanel('R', 0, ROOM.W, 0, 10, { fill: '#33406b' }));
+    for (let i = 0; i < 4; i++) { const u0 = .9 + i * 2.75, u1 = u0 + 2.3; back.appendChild(wallPanel('R', u0 - .08, u1 + .08, 34, H - 14, { fill: '#0b1020' })); back.appendChild(wallPanel('R', u0, u1, 40, H - 20, { fill: 'url(#oWin)' }));
+      for (let k = 0; k < 8; k++) { const uu = u0 + .15 + k * .27, hh = 20 + ((i * 5 + k) % 5) * 12; back.appendChild(wallPanel('R', uu, uu + .17, 44, 44 + hh, { fill: '#121a33' })); if ((i + k) % 3 !== 1) back.appendChild(wallPanel('R', uu + .04, uu + .11, 48, 50 + hh * .45, { fill: '#ffd27a', opacity: .75 })); }
+      back.appendChild(wallPanel('R', u0, u1, H - 32, H - 20, { fill: '#dfe5ee', opacity: .18 })); back.appendChild(wallPanel('R', u0, u1, 40, H - 20, { fill: 'url(#oGlass)' })); }
+    // tường trái: tranh trừu tượng, bảng tiến độ (chỉ màu), đồng hồ, tivi
+    back.appendChild(wallPanel('L', .5, 2.5, 66, H - 24, { fill: '#0b1020', stroke: '#d9b26a', 'stroke-width': 1.2 })); back.appendChild(wallPanel('L', .7, 2.3, 76, H - 34, { fill: '#17213d' }));
+    back.appendChild(wallPanel('L', .9, 1.7, 86, 112, { fill: '#5aa0ff', opacity: .55 })); back.appendChild(wallPanel('L', 1.3, 2.1, 96, 104, { fill: '#d9b26a' })); back.appendChild(wallPanel('L', 1.0, 2.0, 80, 84, { fill: '#ff9f43', opacity: .8 }));
+    back.appendChild(wallPanel('L', 3.0, 7.4, 52, H - 20, { fill: '#05080f', stroke: '#2f3f5e', 'stroke-width': 1.5 })); const qg = el('g'); back.appendChild(qg);
+    const clk = iso(0, 8.3, 128); back.appendChild(el('ellipse', { cx: clk.x, cy: clk.y, rx: 7, ry: 9, fill: '#e9eef8', stroke: '#d9b26a' })); back.appendChild(el('line', { x1: clk.x, y1: clk.y, x2: clk.x + 3, y2: clk.y - 5, stroke: '#111', 'stroke-width': 1 })); back.appendChild(el('line', { x1: clk.x, y1: clk.y, x2: clk.x - 2, y2: clk.y - 2, stroke: '#111', 'stroke-width': 1.4 }));
+    back.appendChild(wallPanel('L', 7.7, 8.9, 70, 112, { fill: '#05080f', stroke: '#2f3f5e' })); back.appendChild(wallPanel('L', 7.8, 8.8, 74, 108, { class: 'tv', fill: '#9fd0ff' }));
+    for (let u = 0; u < ROOM.W; u++) for (let v = 0; v < ROOM.D; v++) back.appendChild(el('polygon', { points: P([iso(u, v), iso(u + 1, v), iso(u + 1, v + 1), iso(u, v + 1)]), fill: (u + v) % 2 ? '#1b2135' : '#1f2639', stroke: '#141a2b', 'stroke-width': .6 }));
+    back.appendChild(el('polygon', { points: P([iso(0, 0), iso(ROOM.W, 0), iso(ROOM.W, ROOM.D), iso(0, ROOM.D)]), fill: 'none', stroke: '#d9b26a', 'stroke-width': 1.2, opacity: .45 }));
+    back.appendChild(el('polygon', { points: P([iso(8.4, 5.6), iso(11.8, 5.6), iso(11.8, 8.8), iso(8.4, 8.8)]), fill: '#2c2347' })); back.appendChild(el('polygon', { points: P([iso(8.7, 5.9), iso(11.5, 5.9), iso(11.5, 8.5), iso(8.7, 8.5)]), fill: 'none', stroke: '#d9b26a', 'stroke-width': .9, opacity: .5 }));
+    [[3, 3], [6.5, 5.5], [10, 2.5]].forEach(([u, v]) => { const p = iso(u, v, 0), top = iso(u, v, 150); back.appendChild(el('ellipse', { cx: p.x, cy: p.y, rx: 70, ry: 34, fill: 'url(#oLamp)' })); front.appendChild(el('line', { x1: top.x, y1: top.y - 30, x2: top.x, y2: top.y - 4, stroke: '#8b96a8', 'stroke-width': 1 })); front.appendChild(el('path', { d: `M${top.x - 14} ${top.y} q14 -12 28 0 l-3 3 h-22z`, fill: '#d9b26a' })); front.appendChild(el('ellipse', { cx: top.x, cy: top.y + 2, rx: 11, ry: 3, fill: '#ffe2b8', opacity: .8 })); });
+    // ---- nội thất; khóa chiều sâu = u nhỏ nhất + v lớn nhất của footprint ----
+    const put = (node, depth) => { node.dataset.depth = depth.toFixed(2); items.appendChild(node); };
+    const monitor = (u, v, w = .7, big = false) => { const g = el('g'); const z = 22; g.appendChild(box(u + w / 2 - .12, v + .1, .24, .18, 6, '#30364a', { transform: `translate(0,-${z})` })); g.appendChild(box(u + w / 2 - .04, v + .16, .08, .06, 14, '#30364a', { transform: `translate(0,-${z + 6})` }));
+      const z0 = z + 18, z1 = z0 + (big ? 24 : 20); const bez = [iso(u, v + .2, z1), iso(u + w, v + .2, z1), iso(u + w, v + .2, z0), iso(u, v + .2, z0)]; g.appendChild(el('polygon', { points: P(bez), fill: '#0b0f18', stroke: '#3a4260', 'stroke-width': .8 }));
+      const sc = [iso(u + .04, v + .2, z1 - 2), iso(u + w - .04, v + .2, z1 - 2), iso(u + w - .04, v + .2, z0 + 2), iso(u + .04, v + .2, z0 + 2)]; g.appendChild(el('polygon', { 'data-screen': 1, points: P(sc), fill: '#182033' }));
+      const ln = el('g', { 'data-lines': 1, opacity: 0 }); [[.1, .55, 4], [.1, .8, 8], [.1, .45, 12], [.1, .7, 16]].forEach(([a, b, dz]) => ln.appendChild(el('polyline', { points: P([iso(u + a * w, v + .2, z1 - 4 - dz), iso(u + b * w, v + .2, z1 - 4 - dz)]), stroke: '#fff', 'stroke-width': 1.2, opacity: .55 }))); g.appendChild(ln); return g; };
+    const keyboard = (u, v) => box(u, v, .6, .22, 2, '#2a3147', { transform: 'translate(0,-22)' });
+    // ghế xoay: lưng ghế ở phía trước (v lớn), người ngồi quay mặt vào bàn
+    const chair = (u, v) => { const g = el('g'); const c = iso(u, v); g.appendChild(el('ellipse', { cx: c.x, cy: c.y + 2, rx: 14, ry: 6, fill: '#1a1f2e' })); g.appendChild(el('rect', { x: c.x - 1.5, y: c.y - 14, width: 3, height: 14, fill: '#5b6480' })); g.appendChild(box(u - .32, v - .32, .64, .64, 7, '#2d3a5e', { transform: 'translate(0,-14)' })); return g; };
+    const chairBack = (u, v) => box(u - .32, v + .22, .64, .12, 34, '#34436d', { transform: 'translate(0,-21)' });
+    const desk = (u, v, w, d, id, big = false) => { const g = el('g', { 'data-desk': id }); g.appendChild(dropShadow(u, v, w, d)); g.appendChild(box(u, v, w, d, 22, '#5e4a38')); g.appendChild(el('polygon', { points: P([iso(u + .05, v + .05, 22.5), iso(u + w - .05, v + .05, 22.5), iso(u + w - .05, v + d - .05, 22.5), iso(u + .05, v + d - .05, 22.5)]), fill: '#7a6148' })); g.appendChild(box(u + w - .7, v + .1, .6, d - .2, 16, '#4a3a2c')); g.appendChild(el('rect', { x: iso(u + w - .4, v + d, 8).x - 4, y: iso(u + w - .4, v + d, 8).y, width: 8, height: 1.5, fill: '#d9b26a' }));
+      if (big) { g.appendChild(monitor(u + .2, v, .8, true)); g.appendChild(monitor(u + 1.15, v, .8, true)); g.appendChild(keyboard(u + .75, v + .5)); const lp = iso(u + 2.15, v + .3, 22); g.appendChild(el('line', { x1: lp.x, y1: lp.y, x2: lp.x + 6, y2: lp.y - 26, stroke: '#d9b26a', 'stroke-width': 1.5 })); g.appendChild(el('path', { d: `M${lp.x - 2} ${lp.y - 30} h16 l-4 8 h-8z`, fill: '#d9b26a' })); }
+      else { g.appendChild(monitor(u + .45, v, .7)); g.appendChild(keyboard(u + .5, v + .5)); g.appendChild(box(u + 1.25, v + .5, .14, .2, 2, '#cfd6e0', { transform: 'translate(0,-22)' })); g.appendChild(box(u + .15, v + .45, .18, .18, 7, pick(['#d9b26a', '#e9eef8', '#5aa0ff']), { transform: 'translate(0,-22)' })); }
+      g.appendChild(el('ellipse', { 'data-glow': 1, cx: iso(u + w / 2, v + .4, 36).x, cy: iso(u + w / 2, v + .4, 36).y, rx: 36, ry: 18, fill: 'url(#oMon)', opacity: 0 }));
+      g.appendChild(el('circle', { 'data-led': 1, cx: iso(u + .12, v + d - .12, 23).x, cy: iso(u + .12, v + d - .12, 23).y, r: 2.2, fill: '#8b98b3' }));
+      return g; };
+    const F = FURN; const dk = (r) => r.u + r.v + r.d;
+    put(desk(F.coordDesk.u, F.coordDesk.v, F.coordDesk.w, F.coordDesk.d, 'coordinator', true), dk(F.coordDesk)); put(chair(F.coordSeat.u, F.coordSeat.v), F.coordSeat.u + F.coordSeat.v - .01); put(chairBack(F.coordSeat.u, F.coordSeat.v), F.coordSeat.u + F.coordSeat.v + .06);
+    env.roles.forEach((r, i) => { const d = F.desk(i); put(desk(d.u, d.v, d.w, d.d, r.id), dk(d)); put(chair(d.seat.u, d.seat.v), d.seat.u + d.seat.v - .01); put(chairBack(d.seat.u, d.seat.v), d.seat.u + d.seat.v + .06); });
+    const wc = el('g'); wc.appendChild(dropShadow(F.cooler.u, F.cooler.v, .5, .5)); wc.appendChild(box(F.cooler.u, F.cooler.v, .5, .5, 40, '#2a3650')); wc.appendChild(box(F.cooler.u + .05, F.cooler.v + .05, .4, .4, 24, '#4f93dc', { transform: 'translate(0,-40)', opacity: .85 })); wc.appendChild(el('polygon', { points: P([iso(F.cooler.u + .08, F.cooler.v + .08, 62), iso(F.cooler.u + .2, F.cooler.v + .08, 62), iso(F.cooler.u + .2, F.cooler.v + .08, 48), iso(F.cooler.u + .08, F.cooler.v + .08, 48)]), fill: '#fff', opacity: .35 })); wc.appendChild(el('circle', { cx: iso(F.cooler.u + .5, F.cooler.v + .3, 30).x, cy: iso(F.cooler.u + .5, F.cooler.v + .3, 30).y, r: 2, fill: '#5aa0ff' })); put(wc, dk(F.cooler));
+    const sf = el('g'); const s = F.sofa; sf.appendChild(dropShadow(s.u, s.v, s.w, s.d)); [[.1, .1], [s.w - .2, .1], [.1, s.d - .2], [s.w - .2, s.d - .2]].forEach(([du, dv]) => sf.appendChild(box(s.u + du, s.v + dv, .1, .1, 6, '#d9b26a')));
+    sf.appendChild(box(s.u, s.v, s.w, s.d, 14, '#3b6a66', { transform: 'translate(0,-6)' })); sf.appendChild(box(s.u, s.v, s.w, .22, 40, '#2f5652', { transform: 'translate(0,-6)' })); sf.appendChild(box(s.u, s.v, .22, s.d, 30, '#2f5652', { transform: 'translate(0,-6)' })); sf.appendChild(box(s.u + s.w - .22, s.v, .22, s.d, 30, '#2f5652', { transform: 'translate(0,-6)' }));
+    [0, 1, 2].forEach((k) => sf.appendChild(box(s.u + .25 + k * .65, s.v + .25, .6, .58, 6, '#4a827c', { transform: 'translate(0,-20)' }))); sf.appendChild(box(s.u + .3, s.v + .28, .4, .4, 10, '#d9b26a', { transform: 'translate(0,-26)' })); put(sf, dk(s));
+    const tb = el('g'); const t = F.table; tb.appendChild(dropShadow(t.u, t.v, t.w, t.d)); [[.1, .1], [t.w - .15, .1], [.1, t.d - .15], [t.w - .15, t.d - .15]].forEach(([du, dv]) => tb.appendChild(box(t.u + du, t.v + dv, .06, .06, 16, '#d9b26a'))); tb.appendChild(el('polygon', { points: P([iso(t.u, t.v, 17), iso(t.u + t.w, t.v, 17), iso(t.u + t.w, t.v + t.d, 17), iso(t.u, t.v + t.d, 17)]), fill: '#9cc4ff', opacity: .35, stroke: '#cfe3ff', 'stroke-width': .8 })); tb.appendChild(box(t.u + .3, t.v + .2, .5, .35, 1.5, '#ff5c5c', { transform: 'translate(0,-17)' })); tb.appendChild(box(t.u + .4, t.v + .28, .5, .35, 1.5, '#e9eef8', { transform: 'translate(0,-18.5)' })); tb.appendChild(box(t.u + 1.1, t.v + .25, .16, .16, 7, '#fff', { transform: 'translate(0,-17)' })); put(tb, dk(t));
+    const kc = el('g'); const c = F.counter; kc.appendChild(dropShadow(c.u, c.v, c.w, c.d)); kc.appendChild(box(c.u, c.v, c.w, c.d, 28, '#3f4a66')); kc.appendChild(box(c.u - .02, c.v - .02, c.w + .04, c.d + .04, 3, '#dfe5ee', { transform: 'translate(0,-28)' }));
+    [0, 1, 2, 3].forEach((k) => kc.appendChild(el('rect', { x: iso(c.u + .4 + k * .8, c.v + c.d, 14).x - 3, y: iso(c.u + .4 + k * .8, c.v + c.d, 14).y, width: 6, height: 1.5, fill: '#d9b26a' })));
+    kc.appendChild(el('polygon', { points: P([iso(c.u + .3, c.v + .2, 31.2), iso(c.u + 1.0, c.v + .2, 31.2), iso(c.u + 1.0, c.v + .7, 31.2), iso(c.u + .3, c.v + .7, 31.2)]), fill: '#2a3147' })); const tap = iso(c.u + .65, c.v + .15, 31); kc.appendChild(el('path', { d: `M${tap.x} ${tap.y} v-12 q0 -4 4 -4 h4`, stroke: '#cfd6e0', 'stroke-width': 2, fill: 'none' }));
+    kc.appendChild(box(c.u + 1.5, c.v + .25, .55, .45, 18, '#1b1f2e', { transform: 'translate(0,-31)' })); kc.appendChild(el('circle', { cx: iso(c.u + 2.05, c.v + .5, 44).x, cy: iso(c.u + 2.05, c.v + .5, 44).y, r: 1.6, fill: '#ff5c5c' })); kc.appendChild(box(c.u + 1.62, c.v + .72, .2, .16, 6, '#fff', { transform: 'translate(0,-31)' }));
+    kc.appendChild(el('g', { 'data-steam': 1, opacity: 0, transform: `translate(${iso(c.u + 1.75, c.v + .8, 42).x},${iso(c.u + 1.75, c.v + .8, 42).y})` }, [el('path', { class: 'steam', d: 'M-3 0 q3 -5 0 -10', stroke: '#fff', 'stroke-width': 1.5, fill: 'none' }), el('path', { class: 'steam', d: 'M3 0 q-3 -5 0 -10', stroke: '#fff', 'stroke-width': 1.5, fill: 'none', style: 'animation-delay:-1s' })]));
+    [2.4, 2.75].forEach((du) => kc.appendChild(box(c.u + du, c.v + .3, .22, .22, 8, '#e9eef8', { transform: 'translate(0,-31)' }))); put(kc, dk(c));
+    back.appendChild(wallPanel('R', 8.4, 11.2, 86, 92, { fill: '#5e4a38' })); [8.7, 9.3, 9.9, 10.5].forEach((u, i) => back.appendChild(wallPanel('R', u, u + .3, 92, 104, { fill: ['#d9b26a', '#e9eef8', '#5aa0ff', '#ff9f43'][i] })));
+    const fr = el('g'); const fg = F.fridge; fr.appendChild(dropShadow(fg.u, fg.v, fg.w, fg.d)); fr.appendChild(box(fg.u, fg.v, fg.w, fg.d, 64, '#cfd6e0')); fr.appendChild(el('polyline', { points: P([iso(fg.u, fg.v + fg.d, 40), iso(fg.u + fg.w, fg.v + fg.d, 40)]), stroke: '#8b96a8', 'stroke-width': 1 })); fr.appendChild(el('rect', { x: iso(fg.u + .1, fg.v + fg.d, 46).x, y: iso(fg.u + .1, fg.v + fg.d, 46).y, width: 2, height: 10, fill: '#8b96a8' })); fr.appendChild(el('rect', { x: iso(fg.u + .1, fg.v + fg.d, 26).x, y: iso(fg.u + .1, fg.v + fg.d, 26).y, width: 2, height: 14, fill: '#8b96a8' })); put(fr, dk(fg));
+    const plant = (p) => { const g = el('g'); g.appendChild(dropShadow(p.u, p.v, p.w, p.d)); g.appendChild(box(p.u + .05, p.v + .05, p.w - .1, p.d - .1, 20, '#5a4635')); const c = iso(p.u + p.w / 2, p.v + p.d / 2, 20); const t = el('g', { class: 'tree' }); [[-16, -40, '#2e8b57'], [14, -44, '#3aa86b'], [0, -52, '#2e8b57'], [-8, -30, '#24704a'], [10, -28, '#3aa86b']].forEach(([dx, dy, col]) => t.appendChild(el('path', { d: `M${c.x} ${c.y} q${dx * .3} ${dy * .5} ${dx} ${dy} q${-dx * .5} ${-dy * .3} ${-dx} ${-dy}z`, fill: col }))); g.appendChild(t); return g; };
+    F.plants.forEach((p) => put(plant(p), dk(p)));
+    env.view = { svg, items, qg }; env.agents.forEach((a) => { a.node = null; a.key = null; }); env.coord.node = null; env.coord.key = null;
+  }
+  function renderAgentIso(a, items) {
+    const key = `${a.act}|${a.mood}|${a.pose}|${a.face}|${a.back}`;
+    if (a.key !== key) { a.key = key; a.node?.remove(); const [tie, hs, hair, skin] = LOOK[a.id]; a.node = el('g', { 'data-agent': 1 }, [person({ tie, skin, hairStyle: hs, hair, state: a.act, pose: a.pose, face: a.face, back: !!a.back, mood: a.mood, badge: !!a.badge, prop: a.act === 'drinking' ? 'cup' : a.act === 'cooking' ? 'mug' : a.act === 'phone' ? 'phone' : '' })]); items.appendChild(a.node); }
+    const z = a.pose === 'sit' ? 2 : a.pose === 'lie' ? 22 : 0;
+    const p = iso(a.u, a.v, z); a.node.setAttribute('transform', `translate(${p.x.toFixed(1)},${p.y.toFixed(1)}) scale(.8)`);
+    const depth = a.pose === 'lie' ? FURN.sofa.u + FURN.sofa.v + FURN.sofa.d + .05 : a.u + a.v + (a.pose === 'sit' ? .02 : 0);
+    a.node.dataset.depth = depth.toFixed(2);
+  }
+  function renderOffice(env) {
+    const { items, qg } = env.view;
+    env.agents.forEach((a) => renderAgentIso(a, items)); renderAgentIso(env.coord, items);
+    const sorted = [...items.children].sort((x, y) => +x.dataset.depth - +y.dataset.depth); let cur = items.firstChild; for (const n of sorted) { if (n !== cur) items.insertBefore(n, cur); else cur = cur.nextSibling; }   // chỉ dời node lệch chỗ: gắn lại node làm animation CSS của node đó khởi động lại
+    env.agents.forEach((a) => { const d = items.querySelector(`[data-desk="${a.id}"]`); if (!d) return; const on = a.mode === 'working'; const color = on ? STATUS.doing : a.done ? STATUS.done : STATUS.free; d.querySelector('[data-screen]').setAttribute('fill', on ? '#8ab4ff' : a.done ? '#1f3a2c' : '#182033'); d.querySelector('[data-screen]').setAttribute('class', on ? 'mon' : ''); d.querySelector('[data-lines]').setAttribute('opacity', on ? 1 : 0); d.querySelector('[data-glow]').setAttribute('opacity', on ? 1 : 0); d.querySelector('[data-led]').setAttribute('fill', color); });
+    const cd = items.querySelector('[data-desk="coordinator"]'); if (cd) { cd.querySelectorAll('[data-screen]').forEach((s) => { s.setAttribute('fill', '#8ab4ff'); s.setAttribute('class', 'mon'); }); cd.querySelectorAll('[data-lines]').forEach((s) => s.setAttribute('opacity', 1)); cd.querySelector('[data-glow]').setAttribute('opacity', 1); cd.querySelector('[data-led]').setAttribute('fill', '#d9b26a'); }
+    items.querySelector('[data-steam]')?.setAttribute('opacity', env.agents.some((a) => a.act === 'cooking') ? 1 : 0);
+    qg.innerHTML = '';
+    env.flow.forEach((id, i) => { const st = i <= env.step ? 'done' : i === env.step + 1 && env.agents.some((a) => a.mode !== 'free') ? 'doing' : 'free'; const v = 3.3 + i * .8; qg.appendChild(wallPanel('L', v, v + .62, 64, 112, { fill: STATUS[st], opacity: st === 'free' ? .22 : .9, class: st === 'doing' ? 'beacon' : '' })); qg.appendChild(wallPanel('L', v + .12, v + .5, 100, 106, { fill: LOOK[id][0] })); });
+  }
+  /* ===== CẢNH NGOÀI: hai tháp kính, quảng trường ===== */
+  const TNF = { x: 440, w: 300, base: 560, lobby: 84, floorH: 72, crown: 40 };
+  const ACME = { x: 810, w: 220, base: 560, h: 390 };
+  function glassBlock(x, y, w, h, fill, side = 28) { const g = el('g'); g.appendChild(el('polygon', { points: `${x + w},${y} ${x + w + side},${y - side * .55} ${x + w + side},${y + h - side * .55} ${x + w},${y + h}`, fill: 'url(#gSideT)' })); g.appendChild(el('rect', { x, y, width: w, height: h, fill })); return g; }
+  function windows(g, x, y, w, h, cols, rows, seed, dim) { let r = seed; const rr = () => { r = (r * 9301 + 49297) % 233280; return r / 233280; }; const cw = w / cols, rh = h / rows; for (let i = 0; i < cols; i++) for (let k = 0; k < rows; k++) { const lit = rr() > (dim ? .8 : .45); g.appendChild(el('rect', { class: lit ? 'win' : '', x: x + i * cw + 3, y: y + k * rh + 3, width: cw - 6, height: rh - 6, rx: 1, fill: lit ? (rr() > .5 ? '#ffd9a3' : '#cfe3ff') : '#0b1428', opacity: lit ? .85 : .9, style: `animation-delay:-${Math.floor(rr() * 11)}s` })); } }
+  function buildTowers() {
+    const root = document.getElementById('towers'); root.innerHTML = '';
+    const g = el('g');
+    const n = envs.length; const top = TNF.base - TNF.lobby - TNF.floorH * n - TNF.crown;
+    // ---- TNF Tower ----
+    const tw = el('g', { filter: 'url(#shadow)' }); tw.appendChild(glassBlock(TNF.x, top, TNF.w, TNF.base - top, 'url(#gGlass)')); g.appendChild(tw);
+    // viền vàng dọc
+    g.appendChild(el('rect', { x: TNF.x, y: top, width: 2, height: TNF.base - top, fill: 'url(#gGold)', opacity: .8 })); g.appendChild(el('rect', { x: TNF.x + TNF.w - 2, y: top, width: 2, height: TNF.base - top, fill: 'url(#gGold)', opacity: .8 }));
+    // vương miện + tên
+    g.appendChild(el('rect', { x: TNF.x, y: top, width: TNF.w, height: TNF.crown, fill: '#0b1020' })); g.appendChild(el('rect', { x: TNF.x, y: top + TNF.crown - 2, width: TNF.w, height: 2, fill: 'url(#gGold)' }));
+    g.appendChild(txt(TNF.x + TNF.w / 2, top + 22, 'TNF TOWER', 'lbl', { 'font-size': 15, 'font-weight': 800, 'letter-spacing': 4, fill: 'url(#gGold)' }));
+    g.appendChild(el('rect', { x: TNF.x + TNF.w / 2 - 1.5, y: top - 70, width: 3, height: 70, fill: '#8b96a8' })); g.appendChild(el('circle', { class: 'beacon', cx: TNF.x + TNF.w / 2, cy: top - 72, r: 4, fill: '#ff5c5c' }));
+    // khung "tầng mới" mờ phía trên vương miện
+    const addG = el('g', { class: 'floor-band', 'data-add': 1 }); addG.appendChild(el('rect', { x: TNF.x + 6, y: top - 46, width: TNF.w - 12, height: 36, rx: 4, fill: '#5aa0ff', opacity: .06, stroke: '#5aa0ff', 'stroke-dasharray': '6 5', 'stroke-opacity': .5 })); addG.appendChild(txt(TNF.x + TNF.w / 2, top - 24, '＋ Thêm tầng · môi trường mới', 'sub', { fill: '#9cc4ff', 'font-size': 11 })); g.appendChild(addG);
+    // các tầng = môi trường, bấm được
+    envs.forEach((env, i) => {
+      const y = TNF.base - TNF.lobby - TNF.floorH * (i + 1);
+      const band = el('g', { class: 'floor-band', 'data-env': env.id });
+      band.appendChild(el('rect', { class: 'glass', x: TNF.x + 2, y, width: TNF.w - 4, height: TNF.floorH, fill: '#5aa0ff', opacity: .0 }));
+      const wg = el('g', { class: 'glass' }); windows(wg, TNF.x + 4, y + 4, TNF.w - 8, TNF.floorH - 8, 9, 2, 11 + i * 7, false); band.appendChild(wg);
+      band.appendChild(el('rect', { x: TNF.x, y: y + TNF.floorH - 1, width: TNF.w, height: 1.5, fill: '#0b1020' }));
+      // biển tầng bên trái tháp, nối bằng gạch mảnh
+      const px = TNF.x - 226, py = y + 10;
+      band.appendChild(el('line', { x1: px + 212, y1: py + 18, x2: TNF.x, y2: py + 18, stroke: '#d9b26a', 'stroke-width': 1, opacity: .6 }));
+      band.appendChild(el('rect', { class: 'plate', x: px, y: py, width: 212, height: 36, rx: 8, fill: '#111829', stroke: '#243049' }));
+      band.appendChild(el('circle', { 'data-dot': env.id, cx: px + 14, cy: py + 18, r: 4, fill: STATUS.free }));
+      band.appendChild(txt(px + 26, py + 15, `Tầng ${i + 1} · ${env.name}`, 'lbl', { 'text-anchor': 'start', 'font-size': 11 }));
+      band.appendChild(txt(px + 26, py + 29, '', 'sub', { 'text-anchor': 'start', 'data-sub': env.id, 'font-size': 10 }));
+      g.appendChild(band);
+    });
+    // sảnh: kính cao, cửa, mái hiên vàng
+    const ly = TNF.base - TNF.lobby;
+    g.appendChild(el('rect', { x: TNF.x + 2, y: ly, width: TNF.w - 4, height: TNF.lobby, fill: '#ffd9a3', opacity: .12 }));
+    for (let i = 0; i < 7; i++) g.appendChild(el('rect', { x: TNF.x + 10 + i * 41, y: ly + 6, width: 32, height: TNF.lobby - 8, fill: '#ffe2b8', opacity: i === 3 ? .32 : .16 }));
+    g.appendChild(el('rect', { x: TNF.x - 10, y: ly + 8, width: TNF.w + 20, height: 4, fill: 'url(#gGold)' }));
+    g.appendChild(el('ellipse', { cx: TNF.x + TNF.w / 2, cy: TNF.base + 2, rx: 150, ry: 10, fill: '#ffd9a3', opacity: .12, filter: 'url(#glowG)' }));
+    g.appendChild(el('rect', { class: 'sheen', x: TNF.x, y: top, width: 70, height: TNF.base - top, fill: 'url(#gSheen)', opacity: .3 }));
+    // ---- ACME Tower: sắp mở ----
+    const bt = el('g', { class: 'floor-band', 'data-acme': 1 });
+    const bk = el('g', { filter: 'url(#shadow)' }); bk.appendChild(glassBlock(ACME.x, ACME.base - ACME.h, ACME.w, ACME.h, 'url(#gGlassDim)', 24)); bt.appendChild(bk);
+    const bw = el('g'); windows(bw, ACME.x + 4, ACME.base - ACME.h + 40, ACME.w - 8, ACME.h - 70, 6, 9, 5, true); bt.appendChild(bw);
+    bt.appendChild(el('rect', { x: ACME.x, y: ACME.base - ACME.h, width: ACME.w, height: 30, fill: '#0b1020' })); bt.appendChild(txt(ACME.x + ACME.w / 2, ACME.base - ACME.h + 20, 'ACME TOWER', 'lbl', { 'font-size': 12, 'font-weight': 800, 'letter-spacing': 3, fill: '#6b7891' }));
+    bt.appendChild(el('rect', { x: ACME.x + 20, y: ACME.base - 150, width: ACME.w - 40, height: 30, rx: 6, fill: '#0b1020', stroke: '#ffb15c', 'stroke-width': 1.5 })); bt.appendChild(txt(ACME.x + ACME.w / 2, ACME.base - 129, 'SẮP MỞ', 'lbl', { class: 'neon', 'font-size': 14, 'font-weight': 800, 'letter-spacing': 3, fill: '#ffb15c' }));
+    bt.appendChild(txt(ACME.x + ACME.w / 2, ACME.base - 108, 'AI của nền tảng · chờ kết nối', 'sub', { 'font-size': 9 }));
+    g.appendChild(bt);
+    root.appendChild(g);
+    // phản chiếu xuống sàn
+    const rf = document.getElementById('reflect'); rf.innerHTML = '';
+    const mirror = el('g', { transform: `translate(0,${TNF.base * 2}) scale(1,-1)` }); mirror.appendChild(el('rect', { x: TNF.x, y: top, width: TNF.w, height: TNF.base - top, fill: 'url(#gGlass)' })); const mw = el('g'); windows(mw, TNF.x + 4, top + TNF.crown, TNF.w - 8, TNF.base - top - TNF.crown - TNF.lobby, 9, n * 2, 11, false); mirror.appendChild(mw); mirror.appendChild(el('rect', { x: ACME.x, y: ACME.base - ACME.h, width: ACME.w, height: ACME.h, fill: 'url(#gGlassDim)' })); mirror.appendChild(el('rect', { x: TNF.x, y: TNF.base - TNF.lobby, width: TNF.w, height: TNF.lobby, fill: '#ffd9a3', opacity: .18 })); rf.appendChild(mirror);
+  }
+  function buildPlaza() {
+    const g = document.getElementById('plaza'); g.innerHTML = ''; const fg = document.getElementById('fg'); fg.innerHTML = ''; const pedBack = el('g'); fg.appendChild(pedBack);
+    const lobbyT = TNF.x + TNF.w / 2, lobbyB = ACME.x + ACME.w / 2, Y0 = TNF.base, CURB = 712, ROAD = 716, ROAD_H = 84;
+    // ---- vỉa hè lát gạch rộng trước hai tòa ----
+    g.appendChild(el('rect', { x: -3000, y: Y0, width: 7200, height: CURB - Y0, fill: '#262f4b' }));
+    for (let y = Y0 + 18; y < CURB; y += 18) g.appendChild(el('line', { x1: -3000, y1: y, x2: 4200, y2: y, stroke: '#1c2339', 'stroke-width': 1 }));
+    for (let x = -3000; x < 4200; x += 46) g.appendChild(el('line', { x1: x, y1: Y0, x2: x, y2: CURB, stroke: '#1c2339', 'stroke-width': 1 }));
+    // dải lát sáng dẫn vào mỗi sảnh + vũng sáng ấm từ sảnh hắt ra
+    [[lobbyT, .09], [lobbyB, .04]].forEach(([cx, o]) => { g.appendChild(el('rect', { x: cx - 70, y: Y0, width: 140, height: CURB - Y0, fill: '#fff', opacity: o })); g.appendChild(el('ellipse', { cx, cy: Y0 + 30, rx: 190, ry: 46, fill: '#ffd9a3', opacity: o * 2.2, filter: 'url(#glowG)' })); });
+    // bồn hàng rào thấp dọc chân mặt tiền (trừ lối vào)
+    const hedge = (x0, x1) => { fg.appendChild(el('rect', { x: x0, y: Y0 + 4, width: x1 - x0, height: 10, rx: 2, fill: '#121a2e' })); fg.appendChild(el('rect', { x: x0, y: Y0 + 3, width: x1 - x0, height: 2, fill: '#d9b26a', opacity: .8 })); for (let x = x0 + 8; x < x1 - 6; x += 14) fg.appendChild(el('ellipse', { cx: x, cy: Y0 - 2, rx: 9, ry: 8, fill: 'url(#gLeaf)' })); };
+    hedge(TNF.x + 6, lobbyT - 60); hedge(lobbyT + 60, TNF.x + TNF.w - 6); hedge(ACME.x + 6, lobbyB - 44); hedge(lobbyB + 44, ACME.x + ACME.w - 6);
+    // thảm đỏ + cột rào TNF; rào công trường ACME
+    g.appendChild(el('polygon', { points: `${lobbyT - 18},${Y0 + 2} ${lobbyT + 18},${Y0 + 2} ${lobbyT + 30},${Y0 + 96} ${lobbyT - 30},${Y0 + 96}`, fill: '#8a1f2e', opacity: .9 }));
+    [[-34, 26], [34, 26], [-42, 70], [42, 70]].forEach(([dx, dy]) => { g.appendChild(el('rect', { x: lobbyT + dx - 1.5, y: Y0 + dy - 20, width: 3, height: 20, fill: '#d9b26a' })); g.appendChild(el('circle', { cx: lobbyT + dx, cy: Y0 + dy - 21, r: 2.6, fill: '#f0d58f' })); });
+    g.appendChild(el('path', { d: `M${lobbyT - 34} ${Y0 + 8} q34 10 68 0`, stroke: '#8a1f2e', 'stroke-width': 2, fill: 'none' })); g.appendChild(el('path', { d: `M${lobbyT - 42} ${Y0 + 52} q42 10 84 0`, stroke: '#8a1f2e', 'stroke-width': 2, fill: 'none' }));
+    for (let i = -1; i <= 1; i++) { const x = lobbyB + i * 36; g.appendChild(el('rect', { x: x - 16, y: Y0 + 10, width: 32, height: 16, rx: 2, fill: '#ffc542' })); g.appendChild(el('path', { d: `M${x - 16} ${Y0 + 26} l32 -16 M${x - 16} ${Y0 + 18} l16 -8 M${x} ${Y0 + 26} l16 -8`, stroke: '#1a1208', 'stroke-width': 3 })); g.appendChild(el('rect', { x: x - 15, y: Y0 + 26, width: 3, height: 10, fill: '#8b96a8' })); g.appendChild(el('rect', { x: x + 12, y: Y0 + 26, width: 3, height: 10, fill: '#8b96a8' })); }
+    g.appendChild(el('circle', { class: 'beacon', cx: lobbyB - 36, cy: Y0 + 6, r: 3, fill: '#ff9f43' })); g.appendChild(el('circle', { class: 'beacon', cx: lobbyB + 36, cy: Y0 + 6, r: 3, fill: '#ff9f43', style: 'animation-delay:-1s' }));
+    // biển tên khu đặt giữa hai tòa, ốp đá
+    const gx = (lobbyT + lobbyB) / 2; g.appendChild(el('rect', { x: gx - 54, y: Y0 + 60, width: 108, height: 26, rx: 3, fill: '#0b1020', stroke: '#d9b26a', 'stroke-width': 1 })); g.appendChild(txt(gx, Y0 + 77, 'KHU THÁP TNF', 'sub', { fill: '#d9b26a', 'font-size': 10, 'letter-spacing': 3, 'font-weight': 700 })); g.appendChild(el('rect', { x: gx - 60, y: Y0 + 86, width: 120, height: 6, fill: '#121a2e' }));
+    // ---- lề đường, đường, vạch sang đường ----
+    g.appendChild(el('rect', { x: -3000, y: CURB - 4, width: 7200, height: 4, fill: '#8b96a8' })); g.appendChild(el('rect', { x: -3000, y: CURB, width: 7200, height: 4, fill: '#3a4360' }));
+    g.appendChild(el('rect', { x: -3000, y: ROAD, width: 7200, height: ROAD_H, fill: '#161b2c' })); g.appendChild(el('line', { x1: -3000, y1: ROAD + 70, x2: 4400, y2: ROAD + 70, stroke: '#f0c36a', 'stroke-width': 2, 'stroke-dasharray': '30 26', opacity: .45 }));
+    for (let i = 0; i < 7; i++) g.appendChild(el('rect', { x: lobbyT - 44 + i * 14, y: ROAD + 6, width: 8, height: ROAD_H - 12, fill: '#fff', opacity: .3 }));
+    g.appendChild(el('rect', { x: -3000, y: ROAD + ROAD_H, width: 7200, height: 4, fill: '#3a4360' })); g.appendChild(el('rect', { x: -3000, y: ROAD + ROAD_H + 4, width: 7200, height: 40, fill: '#1f2740' }));
+    // ---- tiền cảnh (vẽ sau tháp): cây phố dọc lề, đèn đường, xe đậu, xe chạy, người đi bộ ----
+    const tree = (x, y, s, i) => { const t = el('g', { transform: `translate(${x},${y}) scale(${s})` }); t.appendChild(el('ellipse', { cx: 0, cy: 2, rx: 22, ry: 6, fill: '#000', opacity: .35 })); t.appendChild(el('rect', { x: -10, y: -4, width: 20, height: 6, rx: 1, fill: '#121a2e' })); t.appendChild(el('rect', { x: -11, y: -6, width: 22, height: 2, fill: '#8b96a8' }));
+      const tr = el('g', { class: 'tree', style: `animation-delay:-${i}s` }); tr.appendChild(el('path', { d: 'M-2.5 -4 q-1 -26 0 -50 h5 q1 24 0 50z', fill: '#2a1d14' })); tr.appendChild(el('path', { d: 'M0 -40 q-9 -6 -15 -2 M0 -46 q9 -6 15 0', stroke: '#2a1d14', 'stroke-width': 2, fill: 'none' }));
+      [[-13, -58, 15], [13, -57, 14], [0, -76, 16], [-7, -68, 12], [8, -70, 12], [0, -56, 15]].forEach(([cx, cy, r]) => tr.appendChild(el('circle', { cx, cy, r, fill: 'url(#gLeaf)' }))); [[-15, -66], [4, -84], [14, -62]].forEach(([cx, cy]) => tr.appendChild(el('circle', { cx, cy, r: 1.8, fill: '#bff0cf', opacity: .6 }))); t.appendChild(tr); fg.appendChild(t); };
+    const lamp = (x) => { fg.appendChild(el('rect', { x: x - 2, y: CURB - 96, width: 4, height: 92, fill: '#8b96a8' })); fg.appendChild(el('path', { d: `M${x} ${CURB - 96} q0 -10 10 -10 h8`, stroke: '#8b96a8', 'stroke-width': 3, fill: 'none' })); fg.appendChild(el('ellipse', { cx: x + 18, cy: CURB - 104, rx: 7, ry: 3, fill: '#ffe2b8' })); fg.appendChild(el('ellipse', { cx: x + 18, cy: CURB - 60, rx: 44, ry: 60, fill: 'url(#gLampU)', opacity: .35 })); };
+    const slots = []; for (let x = 60; x < 1360; x += 148) slots.push(x);
+    slots.forEach((x, i) => { if (Math.abs(x - lobbyT) < 80 || Math.abs(x - lobbyB) < 70) return; tree(x, CURB - 10, .9, i); });
+    [lobbyT - 110, lobbyT + 110, lobbyB - 100, lobbyB + 100, 120, 1300].forEach((x) => lamp(x));
+    // xe đậu sát lề (tĩnh)
+    const parked = (x, color) => { const c = el('g', { transform: `translate(${x},${ROAD + 14})` }); c.appendChild(el('ellipse', { cx: 36, cy: 10, rx: 40, ry: 4, fill: '#000', opacity: .45 })); c.appendChild(el('path', { d: 'M4 8 q-4 0 -4 -4 v-6 q0 -5 6 -6 l12 -2 q6 -9 16 -9 h16 q10 0 16 9 l12 2 q6 1 6 6 v6 q0 4 -4 4z', fill: color })); c.appendChild(el('path', { d: 'M20 -10 q5 -7 14 -7 h14 q9 0 14 7z', fill: '#dbe7ff', opacity: .5 })); c.appendChild(el('rect', { x: 2, y: -2, width: 70, height: 1.5, fill: '#fff', opacity: .25 })); [16, 58].forEach((wx) => { c.appendChild(el('circle', { cx: wx, cy: 10, r: 5.5, fill: '#111' })); c.appendChild(el('circle', { cx: wx, cy: 10, r: 2.5, fill: '#777' })); }); fg.appendChild(c); };
+    parked(lobbyT - 230, '#e9eef8'); parked(lobbyT - 140, '#1b1f2e'); parked(lobbyB + 120, '#8a1f2e'); parked(lobbyB + 220, '#cfd6e0');
+    const veh = el('g'); fg.appendChild(veh); const pedFront = el('g'); fg.appendChild(pedFront);
+    initTraffic({ crossX: lobbyT, CURB, ROAD, ROAD_H, nodes: { veh, pedBack, pedFront } });
+  }
+  /* ===== GIAO THÔNG: đèn tín hiệu, xe nối đuôi, người sang đường ===== */
+  const traffic = { cars: [], peds: [], t: 0, phase: 'green', phaseT: 0, nodes: {} };
+  const LIGHT = { green: 13, yellow: 2.5, red: 10 };   // giây; đèn đỏ ô tô = đèn xanh người đi bộ
+  function drawVehicle(kind, color) {
+    const g = el('g'); const y = 0; const b = el('g', { class: 'bob' });
+    const len = kind === 'scooter' ? 40 : 82;
+    g.appendChild(el('ellipse', { cx: 0, cy: 2, rx: len / 2 + 4, ry: 4, fill: '#000', opacity: .45 }));
+    if (kind === 'scooter') {
+      b.appendChild(el('path', { d: 'M-16 -6 q-3 -8 6 -9 h10 l6 -10 h8 l-2 10 h6 q6 0 6 6 l-2 3 z', fill: color })); b.appendChild(el('rect', { x: 6, y: -22, width: 2, height: 10, fill: '#333' })); b.appendChild(el('rect', { x: 3, y: -23, width: 8, height: 2, fill: '#333' }));
+      b.appendChild(el('ellipse', { cx: 16, cy: -10, rx: 4, ry: 2.5, fill: '#fff7d6' })); b.appendChild(el('path', { class: 'beam', d: 'M20 -10 l60 -8 v16 z', fill: '#ffe9b0', opacity: .12 }));
+      b.appendChild(el('rect', { 'data-brake': 1, x: -17, y: -9, width: 4, height: 3, rx: 1, fill: '#ff3b3b', opacity: .35 }));
+      [-12, 10].forEach((wx) => { const w = el('g', { 'data-wheel': 1 }); w.appendChild(el('circle', { cx: wx, cy: 0, r: 4.5, fill: '#111' })); w.appendChild(el('line', { x1: wx - 4, y1: 0, x2: wx + 4, y2: 0, stroke: '#999', 'stroke-width': 1 })); b.appendChild(w); });
+      const rider = el('g', { transform: 'translate(-4,-12) scale(.36)' }); rider.appendChild(person({ tie: '#2ed47a', hairStyle: 2, hair: '#111', state: 'idle', pose: 'sit', face: 1 })); rider.querySelector('.head').appendChild(el('circle', { cx: 0, cy: -58, r: 16, fill: '#e9eef8', opacity: .9 })); b.appendChild(rider);
+    } else {
+      const L = -len / 2, R = len / 2; const dark = shade(color, .55), lite = shade(color, 1.25);
+      // vòm bánh
+      [L + 16, L + 62].forEach((wx) => b.appendChild(el('path', { d: `M${wx - 9} -1 a9 9 0 0 1 18 0z`, fill: '#0b0d14' })));
+      const bodies = { sedan: `M${L + 3} -3 q-3 0 -3 -3 v-6 q0 -4 5 -5 l13 -2 q7 -10 17 -10 h18 q10 0 16 10 l12 2 q5 1 5 5 v6 q0 3 -3 3z`, suv: `M${L + 3} -3 q-3 0 -3 -3 v-10 q0 -4 5 -5 l9 -2 q4 -10 14 -10 h32 q10 0 14 10 l8 2 q5 1 5 5 v10 q0 3 -3 3z`, taxi: `M${L + 3} -3 q-3 0 -3 -3 v-6 q0 -4 5 -5 l13 -2 q7 -10 17 -10 h18 q10 0 16 10 l12 2 q5 1 5 5 v6 q0 3 -3 3z`, van: `M${L + 3} -3 q-3 0 -3 -3 v-12 q0 -3 3 -3 h8 q3 -9 10 -9 h46 q7 0 7 7 v17 q0 3 -3 3z` };
+      b.appendChild(el('path', { d: bodies[kind], fill: color })); b.appendChild(el('path', { d: bodies[kind], fill: 'url(#gCarShade)' }));
+      // dải tối gầm + cản trước sau
+      b.appendChild(el('rect', { x: L + 2, y: -6, width: len - 4, height: 3.5, fill: dark, opacity: .9 })); b.appendChild(el('rect', { x: L, y: -8, width: 6, height: 5, rx: 1.5, fill: '#2a2f3d' })); b.appendChild(el('rect', { x: R - 6, y: -8, width: 6, height: 5, rx: 1.5, fill: '#2a2f3d' }));
+      // kính: khung tối + kính xanh + ánh phản chiếu
+      const glass = { sedan: [[L + 19, -21, 'M0 0 q4 -8 12 -8 h3 v8z'], [L + 36, -21, 'M0 0 v-8 h16 q6 0 8 8z']], suv: [[L + 15, -24, 'M0 0 q4 -9 12 -9 h4 v9z'], [L + 33, -24, 'M0 0 v-9 h16 v9z'], [L + 51, -24, 'M0 0 v-9 h10 q5 0 6 9z']], taxi: [[L + 19, -21, 'M0 0 q4 -8 12 -8 h3 v8z'], [L + 36, -21, 'M0 0 v-8 h16 q6 0 8 8z']], van: [[L + 11, -22, 'M0 0 q3 -9 9 -9 h3 v9z'], [L + 26, -22, 'M0 0 v-9 h14 v9z']] };
+      glass[kind].forEach(([x, y, d]) => { b.appendChild(el('path', { d, fill: '#121a2e', transform: `translate(${x - 1},${y + 1}) scale(1.08,1.12)` })); b.appendChild(el('path', { d, fill: '#9fc3ff', opacity: .55, transform: `translate(${x},${y})` })); b.appendChild(el('path', { d, fill: '#fff', opacity: .18, transform: `translate(${x + 1},${y})` })); });
+      // đường chỉ cửa, tay nắm, gương, vệt sáng nóc
+      const seams = kind === 'van' ? [L + 24, L + 44] : [L + 34, L + 56]; seams.forEach((x) => { b.appendChild(el('line', { x1: x, y1: -20, x2: x, y2: -5, stroke: dark, 'stroke-width': .9, opacity: .8 })); b.appendChild(el('rect', { x: x - 6, y: -14, width: 5, height: 1.6, rx: .8, fill: lite, opacity: .9 })); });
+      b.appendChild(el('rect', { x: R - 24, y: -22, width: 3, height: 3, rx: 1, fill: dark })); b.appendChild(el('rect', { x: R - 22, y: -23.5, width: 4, height: 2.5, rx: 1, fill: color }));
+      b.appendChild(el('path', { d: kind === 'van' ? `M${L + 20} -27.5 h44` : kind === 'suv' ? `M${L + 26} -32.5 h34` : `M${L + 34} -28.5 h20`, stroke: '#fff', 'stroke-width': 1.4, opacity: .35, 'stroke-linecap': 'round' }));
+      // biển số, đèn hậu, đèn pha, xi nhan, chùm sáng
+      b.appendChild(el('rect', { x: L + 6, y: -11, width: 8, height: 3, rx: .5, fill: '#e9eef8' })); b.appendChild(el('rect', { x: L + 7, y: -10.3, width: 6, height: 1.6, fill: '#1a1f2e', opacity: .5 }));
+      b.appendChild(el('rect', { 'data-brake': 1, x: L + 1, y: -14, width: 4, height: 5, rx: 1, fill: '#ff3b3b', opacity: .35 })); b.appendChild(el('rect', { x: R - 5, y: -14, width: 4, height: 5, rx: 1, fill: '#fff7d6' })); b.appendChild(el('rect', { x: R - 5, y: -8.5, width: 3, height: 2, rx: .6, fill: '#ffb15c', opacity: .9 }));
+      if (kind === 'taxi') { b.appendChild(el('rect', { x: L + 30, y: -33, width: 20, height: 6, rx: 2, fill: '#ffc542' })); b.appendChild(txt(L + 40, -28.5, 'TAXI', 'sub', { 'font-size': 4.5, fill: '#1a1208', 'font-weight': 800 })); b.appendChild(el('path', { d: `M${L + 8} -16 h${len - 16}`, stroke: '#1a1208', 'stroke-width': 2, 'stroke-dasharray': '3 3', opacity: .5 })); }
+      if (kind === 'van') { b.appendChild(el('rect', { x: L + 46, y: -20, width: 20, height: 12, rx: 1, fill: dark, opacity: .35 })); b.appendChild(el('rect', { x: L + 48, y: -18, width: 16, height: 1.2, fill: lite, opacity: .5 })); }
+      b.appendChild(el('path', { class: 'beam', d: `M${R - 2} -11 l90 -10 v22 z`, fill: '#ffe9b0', opacity: .14 })); b.appendChild(el('ellipse', { cx: R + 40, cy: 2, rx: 34, ry: 5, fill: '#ffe9b0', opacity: .1 }));
+      // bánh: lốp, mâm 5 chấu, trục
+      [L + 16, L + 62].forEach((wx) => { const w = el('g', { 'data-wheel': 1 }); w.appendChild(el('circle', { cx: wx, cy: 0, r: 6, fill: '#0f1116' })); w.appendChild(el('circle', { cx: wx, cy: 0, r: 3.6, fill: '#b9c1cf' })); for (let k = 0; k < 5; k++) { const a = k * 72 * Math.PI / 180; w.appendChild(el('line', { x1: wx, y1: 0, x2: wx + Math.cos(a) * 3.4, y2: Math.sin(a) * 3.4, stroke: '#4a5263', 'stroke-width': 1.2 })); } w.appendChild(el('circle', { cx: wx, cy: 0, r: 1, fill: '#4a5263' })); b.appendChild(w); });
+    }
+    g.appendChild(b); return { g, len };
+  }
+  function spawnCar(lane, x) {
+    const kind = pick(['sedan', 'sedan', 'suv', 'taxi', 'van', 'scooter']); const color = kind === 'taxi' ? '#ffc542' : kind === 'scooter' ? '#e74c3c' : pick(['#2f5fe8', '#d8dee9', '#c0392b', '#1b1f2e', '#5aa0ff', '#8a1f2e', '#9aa3b5', '#2e6f5e']);
+    const { g, len } = drawVehicle(kind, color); traffic.nodes.veh.appendChild(g);
+    const c = { lane, x, len, kind, v: 0, vmax: (kind === 'scooter' ? 95 : 70) * rnd(.85, 1.15), node: g, rot: 0, brakeEl: g.querySelector('[data-brake]'), wheels: [...g.querySelectorAll('[data-wheel]')] };
+    traffic.cars.push(c); return c;
+  }
+  function spawnPed(x, y, dir, crosser) {
+    const p = { x, y, dir, crosser, state: 'walk', face: dir, key: '', node: el('g'), look: pick(Object.keys(LOOK)), v: rnd(22, 32), waitT: 0, side: 'near' };
+    traffic.nodes.pedBack.appendChild(p.node); traffic.peds.push(p); return p;
+  }
+  function initTraffic(cfg) {
+    Object.assign(traffic, cfg); traffic.cars = []; traffic.peds = []; traffic.phase = 'green'; traffic.phaseT = 0;
+    const { crossX, CURB, ROAD, ROAD_H } = cfg; const veh = traffic.nodes.veh;
+    traffic.laneY = { A: ROAD + 62, B: ROAD + 78 }; traffic.stopA = crossX - 58; traffic.stopB = crossX + 58;
+    for (let i = 0; i < 4; i++) spawnCar('A', -200 - i * 170 + rnd(-30, 30)); for (let i = 0; i < 4; i++) spawnCar('B', 1600 + i * 180 + rnd(-30, 30));
+    // cột đèn giao thông cạnh vạch (phía trái, trên vỉa hè)
+    const lx = crossX - 76, base = CURB - 2; const tl = el('g');
+    tl.appendChild(el('rect', { x: lx - 2.5, y: base - 92, width: 5, height: 92, fill: '#3a4360' })); tl.appendChild(el('rect', { x: lx - 9, y: base - 128, width: 18, height: 40, rx: 3, fill: '#1b1f2e', stroke: '#3a4360' }));
+    const lamp = (dy, name) => { const c = el('circle', { cx: lx, cy: base - 118 + dy, r: 5, fill: '#2a2f45' }); traffic.nodes[name] = c; tl.appendChild(c); };
+    lamp(0, 'lRed'); lamp(13, 'lYel'); lamp(26, 'lGrn');
+    tl.appendChild(el('rect', { x: lx - 9, y: base - 84, width: 18, height: 24, rx: 3, fill: '#1b1f2e', stroke: '#3a4360' }));
+    const pr = el('rect', { x: lx - 5, y: base - 80, width: 10, height: 7, rx: 1.5, fill: '#2a2f45' }); const pg = el('rect', { x: lx - 5, y: base - 70, width: 10, height: 7, rx: 1.5, fill: '#2a2f45' }); traffic.nodes.pRed = pr; traffic.nodes.pGrn = pg; tl.appendChild(pr); tl.appendChild(pg);
+    tl.appendChild(el('path', { d: `M${lx - 3} ${base - 78} l3 -2 l3 2 v3 h-6z`, fill: '#0b1020', opacity: .6 })); tl.appendChild(el('path', { d: `M${lx - 3} ${base - 66} l3 -3 l3 3 M${lx} ${base - 69} v4 l-3 2 M${lx} ${base - 65} l3 2`, stroke: '#0b1020', 'stroke-width': 1.2, fill: 'none', opacity: .7 }));
+    veh.parentNode.insertBefore(tl, veh);
+    // người đi bộ: ba người đi dọc, hai người sang đường
+    spawnPed(100, CURB - 16, 1, false); spawnPed(1300, CURB - 30, -1, false); spawnPed(700, CURB - 22, 1, false); spawnPed(950, CURB - 12, -1, false);
+    spawnPed(300, CURB - 14, 1, true); spawnPed(1100, CURB - 18, -1, true);
+  }
+  function setLight() {
+    const { lRed, lYel, lGrn, pRed, pGrn } = traffic.nodes; const ph = traffic.phase;
+    lRed.setAttribute('fill', ph === 'red' ? '#ff3b3b' : '#3a2a2e'); lYel.setAttribute('fill', ph === 'yellow' ? '#ffc542' : '#3a3528'); lGrn.setAttribute('fill', ph === 'green' ? '#2ed47a' : '#243a2e');
+    const pedGo = ph === 'red'; const flash = pedGo && traffic.phaseT > LIGHT.red - 3 && Math.floor(traffic.t * 3) % 2 === 0;
+    pRed.setAttribute('fill', pedGo ? '#3a2a2e' : '#ff3b3b'); pGrn.setAttribute('fill', pedGo && !flash ? '#2ed47a' : '#243a2e');
+    [lRed, lYel, lGrn].forEach((n) => n.setAttribute('filter', '')); (ph === 'red' ? lRed : ph === 'yellow' ? lYel : lGrn).setAttribute('style', 'filter: drop-shadow(0 0 4px currentColor)');
+  }
+  function tickTraffic(dt) {
+    if (!traffic.nodes.veh) return; traffic.t += dt; traffic.phaseT += dt;
+    if (traffic.phaseT > LIGHT[traffic.phase]) { traffic.phaseT = 0; traffic.phase = traffic.phase === 'green' ? 'yellow' : traffic.phase === 'yellow' ? 'red' : 'green'; }
+    setLight();
+    const stopForCars = traffic.phase !== 'green'; const DEC = 150, ACC = 45;
+    ['A', 'B'].forEach((lane) => {
+      const dir = lane === 'A' ? 1 : -1; const stopLine = lane === 'A' ? traffic.stopA : traffic.stopB;
+      const cars = traffic.cars.filter((c) => c.lane === lane).sort((a, b) => (b.x - a.x) * dir);   // xe đầu trước
+      cars.forEach((c, i) => {
+        let target = c.vmax; const front = c.x + dir * c.len / 2;
+        const dLine = (stopLine - front) * dir;   // khoảng cách còn lại tới vạch (dương = chưa tới)
+        if (stopForCars && dLine > -4 && (traffic.phase === 'red' || dLine > c.v * c.v / (2 * DEC) + 6)) target = Math.min(target, Math.sqrt(2 * DEC * Math.max(0, dLine - 4)));
+        const ahead = cars[i - 1]; if (ahead) { const gap = (ahead.x - c.x) * dir - (ahead.len + c.len) / 2 - 14; target = Math.min(target, ahead.v + Math.sqrt(2 * DEC * Math.max(0, gap))); if (gap < 0) target = 0; }
+        if (target < c.v) c.v = Math.max(target, c.v - DEC * dt); else c.v = Math.min(target, c.v + ACC * dt);
+        c.braking = target < c.v - 1 || (c.v < 2 && target < 1);
+        c.x += dir * c.v * dt; c.rot += c.v * dt * 10;
+        if ((dir > 0 && c.x > 1700) || (dir < 0 && c.x < -300)) { const xs = cars.filter((o) => o !== c).map((o) => o.x); const edge = dir > 0 ? Math.min(-300, ...xs) : Math.max(1700, ...xs); c.x = edge - dir * rnd(160, 300); c.v = c.vmax * .6; }   // sinh lại phía sau xe cuối cùng, không đè
+        c.node.setAttribute('transform', `translate(${c.x.toFixed(1)},${traffic.laneY[lane]}) scale(${dir},1)`);
+        c.brakeEl.setAttribute('opacity', c.braking ? 1 : .35); c.wheels.forEach((w) => w.setAttribute('transform', `rotate(${(c.rot % 360).toFixed(0)} ${w.firstChild.getAttribute('cx')} 0)`));
+      });
+    });
+    // người đi bộ
+    const { crossX, CURB, ROAD, ROAD_H } = traffic; const nearY = CURB - 14, farY = ROAD + ROAD_H + 20; const pedGo = traffic.phase === 'red' && traffic.phaseT < LIGHT.red - 2.5;
+    traffic.peds.forEach((p) => {
+      if (p.state === 'walk') { p.x += p.dir * p.v * dt; if (p.x > 1500) { p.dir = -1; } if (p.x < -60) { p.dir = 1; } p.face = p.dir;
+        if (p.crosser && Math.abs(p.x - crossX) < 2 && p.cool <= 0) { p.state = 'wait'; p.x = crossX; }
+        p.cool = (p.cool || 0) - dt; }
+      else if (p.state === 'wait') { if (pedGo) { p.state = 'cross'; p.yTo = p.y < CURB ? farY : nearY; } }
+      else if (p.state === 'cross') { const dy = Math.sign(p.yTo - p.y); p.y += dy * p.v * .8 * dt; if (Math.abs(p.y - p.yTo) < 1) { p.y = p.yTo; if (p.y > CURB) { p.state = 'waitFar'; p.waitT = rnd(3, 7); p.face = pick([1, -1]); } else { p.state = 'walk'; p.dir = pick([1, -1]); p.cool = rnd(10, 20); } } }
+      else if (p.state === 'waitFar') { p.waitT -= dt; if (p.waitT <= 0 && pedGo) { p.state = 'cross'; p.yTo = nearY; } }
+      const moving = p.state === 'walk' || p.state === 'cross'; const key = `${moving ? 'walking' : 'idle'}|${p.face}|${p.state === 'cross' ? (p.yTo > p.y ? 'front' : 'back') : 'side'}`;
+      if (p.key !== key) { p.key = key; p.node.innerHTML = ''; const [tie, hs, hair, skin] = LOOK[p.look]; p.node.appendChild(person({ tie, hairStyle: hs, hair, skin, state: moving ? 'walking' : 'idle', face: p.face, back: p.state === 'cross' && p.yTo < p.y })); }
+      p.node.setAttribute('transform', `translate(${p.x.toFixed(1)},${p.y.toFixed(1)}) scale(.42)`);
+      const wantFront = p.y > CURB - 4; const parent = wantFront ? traffic.nodes.pedFront : traffic.nodes.pedBack; if (p.node.parentNode !== parent) parent.appendChild(p.node);
+    });
+  }
+  function buildSky() {
+    const s = document.getElementById('stars'); for (let i = 0; i < 90; i++) s.appendChild(el('circle', { class: 'star', cx: Math.random() * 1400, cy: Math.random() * 300, r: Math.random() * 1.3 + .3, fill: '#fff', style: `animation-delay:-${(Math.random() * 3).toFixed(1)}s` }));
+    const sk = document.getElementById('skyline'); let x = -200, r = 9; const rr = () => { r = (r * 9301 + 49297) % 233280; return r / 233280; };
+    while (x < 1700) { const w = 30 + rr() * 60, h = 40 + rr() * 170; sk.appendChild(el('rect', { x, y: 560 - h, width: w, height: h, fill: '#0e1530' })); for (let wy = 560 - h + 8; wy < 550; wy += 12) for (let wx = x + 5; wx < x + w - 6; wx += 10) if (rr() > .6) sk.appendChild(el('rect', { x: wx, y: wy, width: 4, height: 6, fill: rr() > .5 ? '#ffd9a3' : '#9cc4ff', opacity: .35 })); x += w + 3 + rr() * 14; }
+  }
+
+  /* ===== vòng lặp ===== */
+  let last = performance.now(), lastLog = 0, openEnv = null;
+  function frame(now) {
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    envs.forEach((env) => { tickEnv(env, dt); const busy = env.agents.some((a) => a.mode !== 'free'); const s = document.querySelector(`[data-sub="${env.id}"]`); if (s) s.textContent = busy ? `đang chạy · bước ${env.step + 2}/${env.flow.length} · ${env.roles.find((r) => r.id === env.flow[env.step + 1])?.label || ''}` : 'rảnh · chờ lệnh'; const d = document.querySelector(`[data-dot="${env.id}"]`); if (d) d.setAttribute('fill', busy ? STATUS.doing : STATUS.free); });
+    tickTraffic(dt);
+    if (openEnv && openEnv.view) renderOffice(openEnv);
+    if (log.length !== lastLog) { lastLog = log.length; refreshSide(); }
+    requestAnimationFrame(frame);
+  }
+  function refreshSide() {
+    document.getElementById('s-envs').innerHTML = envs.map((env, i) => { const busy = env.agents.some((a) => a.mode !== 'free'); return `<div class="run-row" data-env="${env.id}"><span class="dot ${busy ? '' : 'idle'}"></span><b>Tầng ${i + 1}</b> <span class="fine">${env.name}</span><span class="fine" style="margin-left:auto">${busy ? 'đang chạy' : 'rảnh'}</span></div><div class="steps">${env.flow.map((id, k) => `<span class="step ${k <= env.step ? 'done' : k === env.step + 1 && busy ? 'doing' : ''}">${env.roles.find((r) => r.id === id).label}</span>`).join('')}</div>`; }).join('') + `<div class="run-row" data-acme="1"><span class="dot off"></span><b>ACME Tower</b><span class="fine" style="margin-left:auto">sắp mở</span></div>`;
+    document.getElementById('s-log').innerHTML = log.slice(-5).map((l) => `<span>${l}</span>`).join('');
+  }
+  buildSky(); buildPlaza(); addEnv(ENV_PRESETS[0]); addEnv(ENV_PRESETS[1]); log.push('▶ Hai môi trường đang chạy'); refreshSide(); requestAnimationFrame(frame);
+  document.getElementById('add-env').addEventListener('click', () => { if (envs.length < 5) { addEnv(ENV_PRESETS[envs.length % ENV_PRESETS.length]); log.push(`＋ Tầng ${envs.length}: ${envs[envs.length - 1].name}`); refreshSide(); } });
+
+  /* ===== popup ===== */
+  const views = {
+    command: ['Ra lệnh', `<p>Chọn môi trường (tầng) và gõ một câu tiếng Việt.</p><p><label>Môi trường <select id="sel-env"></select></label></p><textarea style="width:100%;height:110px">Hiển thị tên tiếng Việt cho mọi vai của run lập trình…</textarea><p style="text-align:right"><button class="btn ghost" data-close>Hủy</button> <button class="btn">Chạy</button></p>`],
+    add: ['Tạo môi trường mới', `<p>Một môi trường = một tầng của TNF Tower: tên, loại, project, bộ vai, lệnh cho phép, memory riêng.</p><p><input class="f" placeholder="Tên môi trường" style="width:100%"></p><p><label>Loại <select><option>Lập trình</option><option>Nghiên cứu</option></select></label> &nbsp; <label>Bộ vai <select><option>roles-coding</option><option>roles-research</option></select></label></p><p style="text-align:right"><button class="btn ghost" data-close>Hủy</button> <button class="btn" id="m-add">Tạo tầng</button></p>`],
+    runs: ['Run', `<table><tr><th>Lúc</th><th>Tầng</th><th>Lệnh</th><th>Trạng thái</th><th>Chi phí ước tính</th></tr><tr><td>09:12</td><td>1</td><td>Tên vai tiếng Việt</td><td><span class="tag">đang chạy</span></td><td>$0,18</td></tr><tr><td>09:05</td><td>2</td><td>Giá thép Q4</td><td><span class="tag">đang chạy</span></td><td>$0,06</td></tr></table>`],
+    history: ['Lịch sử', `<table><tr><th>Ngày</th><th>Run</th><th>Token</th></tr><tr><td>23/10</td><td>5</td><td>412k</td></tr></table>`],
+    library: ['Thư viện vai', `<p>Mỗi tầng có bộ vai riêng; mỗi vai một bàn trong văn phòng.</p>`],
+    settings: ['Cài đặt', `<p>Model, trần lượt, ngân sách, trần song song toàn tòa nhà, đường hầm, ngôn ngữ, tên hai tòa nhà.</p>`],
+    acme: ['ACME Tower · sắp mở', `<p>Nơi các AI của nền tảng làm việc. Chưa kết nối; khi nền tảng đẩy trạng thái <code>claude -p</code> về controller, mỗi tầng sẽ là một nhóm nhân viên AI và mở được văn phòng như TNF Tower.</p>`],
+  };
+  const ov = document.getElementById('overlay');
+  function openView(k) { const [t, h] = views[k]; document.getElementById('m-title').textContent = t; document.getElementById('m-sub').textContent = ''; document.getElementById('m-body').innerHTML = h; openEnv = null; ov.classList.add('open'); const sel = document.getElementById('sel-env'); if (sel) sel.innerHTML = envs.map((e, i) => `<option>Tầng ${i + 1} · ${e.name}</option>`).join(''); }
+  function openOffice(env) {
+    const i = envs.indexOf(env);
+    document.getElementById('m-title').textContent = `Tầng ${i + 1} · ${env.name}`; document.getElementById('m-sub').textContent = 'văn phòng · nhìn từ trên xuống 45°';
+    document.getElementById('m-body').innerHTML = `<div class="office"><svg viewBox="0 0 900 560" preserveAspectRatio="xMidYMid meet"></svg></div><div class="legend"><span><i style="background:#8b98b3"></i>rảnh</span><span><i style="background:#5aa0ff"></i>đang làm</span><span><i style="background:#2ed47a"></i>xong</span><span style="margin-left:auto">Luồng: ${env.flow.map((id) => env.roles.find((r) => r.id === id).label).join(' → ')}</span></div><p class="fine" style="margin:8px 0 0">Màu cà vạt = vai. Điều phối giao việc tại bàn lớn → nhân viên về bàn mình làm → lên báo cáo → rảnh thì uống nước, pha cà phê, nghỉ sofa, trò chuyện. <span class="tag">Diff</span> <span class="tag">Test</span> <span class="tag">Môi trường</span> <span class="tag">Memory</span></p>`;
+    drawOffice(document.querySelector('.office svg'), env); openEnv = env; renderOffice(env); ov.classList.add('open');
+  }
+  function close() { ov.classList.remove('open'); openEnv = null; }
+  document.addEventListener('click', (e) => {
+    const o = e.target.closest('[data-open]'); if (o) return openView(o.dataset.open);
+    const ev = e.target.closest('[data-env]'); if (ev) return openOffice(envs.find((x) => x.id === ev.dataset.env));
+    if (e.target.closest('[data-add]')) return openView('add');
+    if (e.target.closest('[data-acme]')) return openView('acme');
+    if (e.target.id === 'm-add') { document.getElementById('add-env').click(); return close(); }
+    if (e.target.closest('[data-close]') || e.target === ov || e.target.id === 'm-close') close();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  const city = document.querySelector('svg.city');
+  function fit() { city.setAttribute('viewBox', window.innerWidth < 760 ? '200 150 900 696' : '0 0 1400 846'); }
+  fit(); window.addEventListener('resize', fit);
+</script>
+</body>
+</html>

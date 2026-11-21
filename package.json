@@ -1,0 +1,53 @@
+{
+  "name": "tnf-cli",
+  "version": "0.1.5",
+  "private": true,
+  "license": "Apache-2.0",
+  "description": "Local web controller that orchestrates AI CLIs (Claude Code, Antigravity CLI, OpenAI Codex CLI) with role-based agents.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.5"
+  },
+  "bin": {
+    "tnf": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && npm run build:ui",
+    "build:ui": "vite build --config ui/vite.config.ts",
+    "dev:ui": "vite --config ui/vite.config.ts",
+    "serve": "tsx src/cli.ts serve",
+    "tnf": "tsx src/cli.ts",
+    "test": "vitest run",
+    "test:fast": "vitest run tests/run/cli-accounts-and-agy.test.ts tests/run/codex-provider.test.ts tests/run/phased-and-role-routing.test.ts tests/run/stream-parser.test.ts tests/ui/english-ui-no-vietnamese.test.ts tests/release/release-pipeline-run.test.ts",
+    "privacy:scan": "node scripts/privacy-scan.mjs",
+    "publish:snapshot": "node scripts/publish-snapshot.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p ui/tsconfig.json --noEmit",
+    "smoke": "tsx scripts/smoke.ts",
+    "reparse": "tsx scripts/reparse.ts",
+    "package": "tsx scripts/package.ts",
+    "installer": "tsx scripts/installer.ts"
+  },
+  "dependencies": {
+    "gltf-validator": "2.0.0-dev.3.10",
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "@google/model-viewer": "4.4.0",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/three": "^0.187.0",
+    "@types/ws": "^8.5.13",
+    "@vitejs/plugin-react": "^5.0.0",
+    "cmdk": "^1.1.1",
+    "dompurify": "^3.4.17",
+    "marked": "^18.1.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "three": "^0.187.0",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.0",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.5"
+  }
+}

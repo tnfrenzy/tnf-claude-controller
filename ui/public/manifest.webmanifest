@@ -1,0 +1,14 @@
+{
+  "name": "TNF CLI",
+  "short_name": "TNF CLI",
+  "description": "Điều phối AI CLI (Claude Code, Antigravity CLI) bằng một câu tiếng Việt",
+  "display": "standalone",
+  "start_url": "/",
+  "scope": "/",
+  "background_color": "#111827",
+  "theme_color": "#111827",
+  "icons": [
+    { "src": "/icon-tn-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-tn-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

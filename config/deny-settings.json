@@ -1,0 +1,39 @@
+{
+  "$comment": "Deny list per CONTEXT-SPEC-v1 section 4.3 (spike S6). Prefix patterns; explicit variants for git -C / -c.",
+  "permissions": {
+    "deny": [
+      "Bash(git push*)",
+      "Bash(git -C * push*)",
+      "Bash(git -c * push*)",
+      "Bash(git * push *)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean*)",
+      "Bash(git checkout main*)",
+      "Bash(git checkout master*)",
+      "Bash(git switch main*)",
+      "Bash(git switch master*)",
+      "Bash(git branch -D*)",
+      "Bash(git branch -d main*)",
+      "Bash(git worktree*)",
+      "Bash(git remote*)",
+      "Bash(git rebase*)",
+      "Bash(git merge*)",
+      "Bash(git commit *--no-verify*)",
+      "Bash(git commit -n *)",
+      "Bash(git * --force*)",
+      "Bash(git * -f *)",
+      "Bash(rm -rf *)",
+      "Bash(rm -fr *)",
+      "Bash(rm -r -f *)",
+      "Bash(rm -f -r *)",
+      "Bash(Remove-Item *-Recurse*)",
+      "Bash(rmdir /s*)",
+      "Bash(del /s*)",
+      "Bash(npm publish*)",
+      "Bash(npm install -g*)",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(Invoke-WebRequest*)"
+    ]
+  }
+}

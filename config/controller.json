@@ -1,0 +1,149 @@
+{
+  "$comment": "Paths may be absolute or relative to the repo root. claudePath: null = auto-detect from PATH (resolves npm .cmd shim to bin/claude.exe).",
+  "claudePath": null,
+  "workspaceDir": "../tnf-claude-workspace",
+  "worktreesDir": "../tnf-claude-workspace/worktrees",
+  "dataDir": "./data",
+  "server": {
+    "host": "127.0.0.1",
+    "port": 4800,
+    "$allowedOrigins_hint": "Origin them cua trinh duyet khi mo qua duong ham (vi du Tailscale Serve: https://<may>.<tailnet>.ts.net). Server van chi bind 127.0.0.1; token van bat buoc.",
+    "allowedOrigins": []
+  },
+  "$models_hint": "Danh sách model hiện trên giao diện. id là alias hoặc model id mà Claude Code chấp nhận; nếu gói thuê bao không có model đó, CLI sẽ báo lỗi ngay trên trang Lần chạy.",
+  "models": [
+    {
+      "id": "haiku",
+      "label": "Haiku 5.5 — nhanh, rẻ"
+    },
+    {
+      "id": "sonnet",
+      "label": "Sonnet 5.5 — cân bằng (mặc định)"
+    },
+    {
+      "id": "opus",
+      "label": "Opus 5.5 — mạnh, đắt"
+    },
+    {
+      "id": "claude-fable-5-2",
+      "label": "Fable 5.2 — mạnh nhất (nếu gói hỗ trợ)"
+    }
+  ],
+  "defaults": {
+    "authMode": "subscription",
+    "model": "sonnet",
+    "maxTurns": 40,
+    "maxBudgetUsd": 3,
+    "timeoutMs": 3600000,
+    "maxConcurrentSubagents": 3,
+    "maxSubagentSpawnDepth": 1,
+    "$kinds_hint": "research = bo vai nghien cuu web cu (cwd runs/<id>); coding = agent lam viec trong git worktree cua repo dich (CONTEXT-SPEC-v1 4.2-4.3, 8).",
+    "research": {
+      "allowedTools": [
+        "Agent",
+        "WebSearch",
+        "WebFetch",
+        "Read",
+        "Write"
+      ],
+      "agentsFile": "./config/roles-research.json",
+      "systemPromptFile": "./config/coordinator-research.md",
+      "disallowedTools": [],
+      "extraArgs": [],
+      "maxRoleCalls": 10
+    },
+    "coding": {
+      "allowedTools": [
+        "Agent",
+        "Read",
+        "Grep",
+        "Glob",
+        "Edit",
+        "Write",
+        "Bash(npm test*)",
+        "Bash(npm run *)",
+        "Bash(npx vitest*)",
+        "Bash(npx tsc*)",
+        "Bash(node *)",
+        "Bash(git add*)",
+        "Bash(git commit*)",
+        "Bash(git diff*)",
+        "Bash(git status*)",
+        "Bash(git log*)",
+        "Bash(git show*)",
+        "Bash(git branch --show-current*)",
+        "Bash(git ls-tree*)",
+        "Bash(git ls-files*)",
+        "Bash(git rev-parse*)",
+        "Bash(git rev-list*)",
+        "Bash(git merge-base*)",
+        "Bash(git merge-tree*)",
+        "Bash(git grep*)",
+        "Bash(git check-ignore*)",
+        "Bash(git rm*)",
+        "Bash(npx tsx*)",
+        "WebSearch",
+        "WebFetch",
+        "TodoWrite"
+      ],
+      "agentsFile": "./config/roles-coding.json",
+      "systemPromptFile": "./config/coordinator-coding.md",
+      "settingsFile": "./config/deny-settings.json",
+      "disallowedTools": [
+        "Bash(git push*)",
+        "Bash(git reset --hard*)",
+        "Bash(rm -rf *)"
+      ],
+      "extraArgs": [
+        "--setting-sources",
+        "project"
+      ],
+      "maxRoleCalls": 20,
+      "callTimeoutMinutes": 20,
+      "knownEnvFailures": [
+        "UNKNOWN: unknown error",
+        "-4094",
+        "EPERM junction"
+      ],
+      "nodeModules": {
+        "mode": "copy",
+        "maxMb": 600
+      },
+      "contextScan": {
+        "enabled": true,
+        "maxBytes": 16384,
+        "files": [
+          "CLAUDE.md",
+          "docs/HANDOVER.md",
+          "README.md"
+        ]
+      }
+    }
+  },
+  "limits": {
+    "maxTurnsCeiling": 100,
+    "maxBudgetUsdCeiling": 10,
+    "maxRoleCallsCeiling": 30
+  },
+  "queue": {
+    "maxBudgetUsd": null
+  },
+  "ui": {
+    "towers": [
+      "TNF Tower",
+      "Huấn luyện AI"
+    ],
+    "dailyCostWarnUsd": 5
+  },
+  "tools": {
+    "cad": {
+      "python": null
+    }
+  },
+  "automation": {
+    "enabled": false,
+    "maxRetries": 0,
+    "schedule": null,
+    "webhooks": []
+  }
+}

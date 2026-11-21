@@ -1,0 +1,7 @@
+TNF CLI
+Copyright 2026 tnfrenzy
+
+This product includes third-party software, each under its own license:
+- Pannellum (MIT), ui/public/vendor/pannellum/LICENSE-pannellum.txt
+- @google/model-viewer (Apache-2.0), three.js (MIT) and other npm dependencies, see their packages.
+- Poly Haven textures downloaded on demand (CC0).

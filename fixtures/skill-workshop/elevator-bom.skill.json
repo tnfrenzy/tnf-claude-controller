@@ -1,0 +1,14 @@
+{
+  "slug": "elevator-bom",
+  "title": "Bản vẽ chi tiết thang máy sang bảng vật tư",
+  "goal": "Đọc mô tả bản vẽ chi tiết thang máy (dữ liệu giả) và lập bảng vật tư gồm mã vật tư, số lượng, quy cách.",
+  "files": {
+    "SKILL.md": "# Bản vẽ chi tiết thang máy -> bảng vật tư\n\nĐọc mô tả bản vẽ và trả bảng vật tư, mỗi dòng dạng `MÃ xSL | quy cách`, các dòng cách nhau bằng dấu `;`.\n",
+    "rules.md": "- Luôn liệt kê mã vật tư theo mẫu EX-MAT-xxx.\n- Số lượng viết dạng `x<số>` ngay sau mã.\n- Quy cách ghi sau dấu `|`.\n",
+    "inputs.json": "{\"description\":\"Mô tả bản vẽ chi tiết thang máy (giả)\",\"fields\":[{\"name\":\"ban_ve\",\"label\":\"Mô tả bản vẽ\",\"type\":\"longtext\"}]}",
+    "eval/rubric.json": "{\"version\":1,\"passScore\":90,\"criteria\":[{\"id\":\"ma-vat-tu\",\"label\":\"Đủ mã vật tư\",\"weight\":40,\"kind\":\"code\",\"check\":{\"type\":\"contains\",\"value\":\"EX-MAT-001\"}},{\"id\":\"so-luong\",\"label\":\"Đúng số lượng\",\"weight\":40,\"kind\":\"code\",\"check\":{\"type\":\"regex\",\"pattern\":\"EX-MAT-002 x2\\\\b\"}},{\"id\":\"quy-cach\",\"label\":\"Đúng quy cách\",\"weight\":20,\"kind\":\"ai\",\"prompt\":\"Quy cách của từng vật tư trong bảng có khớp với bảng mẫu không?\"}]}",
+    "examples/train-1.json": "{\"input\":{\"ban_ve\":\"DWG-EX-001: khung ray dẫn hướng cabin, liên hệ drawings@example.com\"},\"expected\":\"EX-MAT-001 x4 | thep U 40x20; EX-MAT-002 x2 | bulong M12; EX-MAT-003 x8 | long den phang\"}",
+    "examples/train-2.json": "{\"input\":{\"ban_ve\":\"DWG-EX-002: giá đỡ đối trọng, xem https://example.com/dwg/002\"},\"expected\":\"EX-MAT-001 x6 | thep U 50x25; EX-MAT-002 x2 | bulong M16; EX-MAT-004 x2 | tam dem cao su\"}",
+    "examples/holdout-1.json": "{\"input\":{\"ban_ve\":\"DWG-EX-003: bệ đỡ máy kéo HOLDOUT-EX-SECRET\"},\"expected\":\"EX-MAT-001 x2 | thep H 100x100; EX-MAT-002 x4 | bulong M20; HOLDOUT-EX-SECRET\"}"
+  }
+}

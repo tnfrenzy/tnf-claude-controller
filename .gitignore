@@ -1,0 +1,14 @@
+node_modules/
+dist/
+ui/dist/
+data/
+*.log
+.claude/launch.json
+build/
+fixtures/workshop3d/**/.count-*
+docs/screens/
+.privacy-denylist
+.publish-config.json
+
+__pycache__/
+*.pyc
